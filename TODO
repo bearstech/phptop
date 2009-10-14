@@ -1,0 +1,6 @@
+- Warn if no logfile is found
+- Limit URI column width
+- Option to strip http://host part
+- HTML output mode
+- Allow many -s options to generate multiple reports in one pass
+  (very useful with HTML mode, eg. generate a full report every hour)
