@@ -1,0 +1,169 @@
+#!/usr/bin/perl
+
+# Depends: libwww-perl (what else ?)
+
+use strict;
+use warnings;
+use Getopt::Long qw(:config no_auto_abbrev no_ignore_case bundling);
+use HTTP::Date;
+use POSIX;
+
+my $package_name    = 'phptop';
+my $package_version = '0.1';
+my $package_owner   = 'Copyright (C) 2009 Bearstech - http://bearstech.com/';
+my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
+
+
+my $help;
+my $version;
+my @log;
+my $full_query;
+my $count = 10;
+my $sortkey = 'hit';
+my $span = 60;
+push(@log, '/var/log/apache2/error*log', '/var/log/apache2/*/error*log') if !@log;
+
+
+sub print_short_help {
+    print STDERR <<EOF;
+Usage: $package_name [options]
+Try '$package_name --help' for more information.
+EOF
+    exit 2;
+}
+
+sub print_help {
+    print STDERR <<EOF;
+Usage: $package_name [options]
+
+Options:
+  -c, --count N    Limit output to top N URIs (default is $count)
+  -f, --full-query Consider full URI with CGI parameters
+  -h, --help       Display this information
+  -l, --log path   Logfiles to parse, you may use several -l and wildcards
+  -s, --sort key   Sort key: hit, time, user, sys, mem or inc (default is $sortkey)
+  -t, --time N     Consider log events from now back to N minutes (default is $span)
+  -v, --version    Display version number and copyright info
+
+Columns explanation:
+  Hit       Number of queries
+  Time      Total wall clock time (in seconds)
+  User      Total CPU time (in seconds)
+  Sys       Total system time (in seconds)
+  Mem/hit   Average allocated memory per query (MB/hit)
+  Mem_max   Maximum allocated memory across queries (MB)
+  Inc/hit   Average included files per query
+  Inc_max   Maximum included files across queries
+EOF
+    exit 0
+}
+
+sub print_version {
+    print <<EOF;
+$package_name $package_version
+$package_owner
+EOF
+    exit 0;
+}
+
+
+GetOptions(
+    'c|count=i'      => \$count,
+    'f|full-query'   => \$full_query,
+    'h|help'         => \$help,
+    'l|log=s'        => \@log,
+    's|sort=s'       => \$sortkey,
+    't|time=s'       => \$span,
+    'v|version'      => \$version,
+)
+or print_short_help();
+
+print_help() if $help;
+print_version() if $version;
+
+my @logfiles;
+map { push(@logfiles, glob($_)) } @log;
+
+my $now = time();
+$span *= 5;
+POSIX::setlocale(POSIX::LC_ALL, 'C'); # Use . as decimal separator
+
+my %stat;
+foreach (@logfiles) {
+    my $lh;
+    if (!open($lh, "<$_")) {
+        warn "$_: $!";
+        next;
+    }
+
+    while (<$lh>) {
+        chomp;
+        s/(\d),(\d)/$1.$2/g; # Be independent of the PHP locale, normalize on dot decimal separator
+        s/, referer.*//;     # Apache may append a referer in error.log, ignore
+        next if not /\bphptop ([^ ]+) (.*)/;
+
+        my ($uri, $pairs) = ($1, $2);
+	$uri =~ s/index\.php\/?//;  # / == /index.php (99.9% of the time)
+        $uri =~ s/\?.*// if not defined $full_query;
+
+        # Only keep records within expected time span. If a time stamp is not found or
+	# cannot be parsed, we still process the item.
+        if (/^\[(.*?)\]/) {
+	    my $stamp = str2time($1);
+	    next if defined $stamp && ($now - $stamp) > $span;
+        }
+
+        # For each 'key:<numeric val>' sum the numeric value per URI
+        foreach (split(/ /, $pairs)) {
+            my ($key, $val) = split(/:/, $_);
+            if ($key eq 'mem') {
+                $stat{$uri}{'mem_max'} = $val if ($stat{$uri}{'mem_max'} || 0) < $val;
+            }
+            if ($key eq 'inc') {
+                $stat{$uri}{'inc_max'} = $val if ($stat{$uri}{'inc_max'} || 0) < $val;
+            }
+            $stat{$uri}{'hit'}++;
+            $stat{$uri}{$key} += $val;
+        }
+    }
+
+    close($lh);
+}
+
+# Convert memory and include values from total to 'per hit', more useful and meaningful
+foreach (values %stat) {
+    $_->{'mem_max'} /= 2**20;  # Also scale memory values from bytes to MB
+    $_->{'mem'} /= $_->{'hit'} * 2**20;
+    $_->{'inc'} /= $_->{'hit'};
+}
+
+# Sort queries according to $sortkey (they are all numeric)
+my @keys = qw/hit time user sys mem mem_max inc inc_max/;
+my @sorted = sort { $stat{$b}{$sortkey} - $stat{$a}{$sortkey} } keys %stat;
+
+# Compute URI column width
+my $width = 0;
+my $n = 0;
+foreach (@sorted) {
+    last if $n++ >= $count;
+    my $w = length($_);
+    $width = $w if $w > $width;
+}
+
+my %total;
+my @tkeys = qw/hit time user sys/;
+$n = 0;
+
+printf("%-${width}s %s\n", "", join(' ', map { sprintf('%8s', ucfirst($_ =~ /^(mem|inc)$/ ? "$_/hit" : $_)) } @keys));
+foreach (@sorted) {
+    my $s = $stat{$_};
+    $total{$_} += $s->{$_} foreach @tkeys;
+    next if $n++ >= $count; # Continue to loop and only sum totals if $count records have been displayed
+
+    printf("%-${width}s", $_);
+    printf($_ =~ m/hit|inc/ ? ' %8d' : ' %8.1f', $s->{$_}) foreach @keys;
+    print "\n";
+}
+printf("\n%-${width}s", 'Total');
+printf($_ =~ m/hit/ ? ' %8d' : ' %8.1f', $total{$_}) foreach @tkeys;
+print "\n";
