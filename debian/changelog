@@ -1,3 +1,9 @@
+phptop (0.1-2) unstable; urgency=low
+
+  * removed unnecessary dependency
+
+ -- Sebastien Bocahu <sbocahu@bearstech.com>  Wed, 14 Oct 2009 17:16:43 +0200
+
 phptop (0.1-1) unstable; urgency=low
 
   * Initial release (See: #4)

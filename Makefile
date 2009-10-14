@@ -7,3 +7,17 @@ release:
 	  cp phptop phptop_hook.php COPYING README TODO $$release; \
 	  tar czf $$release.tar.gz $$release; \
 	  rm -rf $$release )
+
+deb:
+	@echo "Don't forget to edit debian/changelog..."
+	@sleep 2
+	@echo "Building the package..."
+	dpkg-buildpackage -rfakeroot -uc -us
+
+debclean:
+	fakeroot debian/rules clean
+
+
+debupload:
+	rsync -z ../phptop_*.deb builder@deb.bearstech.com:~/src/phptop/
+	ssh builder@deb.bearstech.com make -C www phptop
