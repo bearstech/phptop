@@ -1,0 +1,39 @@
+#!/usr/bin/make -f
+
+configure: 
+				dh_testdir
+build: configure 
+				dh_testdir
+				touch $@
+
+clean: 
+				dh_testdir
+				dh_testroot
+				dh_clean 
+
+install: build
+				dh_testdir
+				dh_testroot
+				dh_clean -k 
+				dh_installdirs
+
+				install -o root -g root -m 444 $(CURDIR)/phptop_hook.php $(CURDIR)/debian/phptop/usr/share/phptop/phptop_hook.php
+				install -o root -g root -m 755 $(CURDIR)/phptop $(CURDIR)/debian/phptop/usr/bin/phptop
+				install -o root -g root -m 444 $(CURDIR)/debian/phptop.ini $(CURDIR)/debian/phptop/etc/php5/conf.d/phptop.ini
+
+binary: build install
+				dh_testdir
+				dh_testroot
+				dh_installchangelogs 
+				dh_installdocs
+				dh_installexamples
+				dh_installman
+				dh_link
+				dh_compress
+				dh_fixperms
+				dh_installdeb
+				dh_gencontrol
+				dh_md5sums
+				dh_builddeb
+
+.PHONY: build clean binary install configure
