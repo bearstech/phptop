@@ -77,7 +77,6 @@ EOF
 sub print_version {
     print <<EOF;
 $package_name $package_version
-$package_owner
 EOF
     exit 0;
 }
