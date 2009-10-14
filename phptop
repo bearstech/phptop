@@ -25,7 +25,7 @@ use HTTP::Date;
 use POSIX;
 
 my $package_name    = 'phptop';
-my $package_version = '0.1';
+my $package_version = '0.2-dev';
 my $package_owner   = 'Copyright (C) 2009 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
@@ -37,12 +37,13 @@ my $full_query;
 my $count = 10;
 my $sortkey = 'hit';
 my $span = 60;
-push(@log, '/var/log/apache2/error*log', '/var/log/apache2/*/error*log') if !@log;
+my $path_only;
 
 
 sub print_short_help {
     print STDERR <<EOF;
 Usage: $package_name [options]
+
 Try '$package_name --help' for more information.
 EOF
     exit 2;
@@ -57,6 +58,7 @@ Options:
   -f, --full-query Consider full URI with CGI parameters
   -h, --help       Display this information
   -l, --log path   Logfiles to parse, you may use several -l and wildcards
+  -p, --path-only  Only print path, skip http://host
   -s, --sort key   Sort key: hit, time, user, sys, mem or inc (default is $sortkey)
   -t, --time N     Consider log events from now back to N minutes (default is $span)
   -v, --version    Display version number and copyright info
@@ -75,9 +77,7 @@ EOF
 }
 
 sub print_version {
-    print <<EOF;
-$package_name $package_version
-EOF
+    print "$package_name $package_version\n";
     exit 0;
 }
 
@@ -87,6 +87,7 @@ GetOptions(
     'f|full-query'   => \$full_query,
     'h|help'         => \$help,
     'l|log=s'        => \@log,
+    'p|path'         => \$path_only,
     's|sort=s'       => \$sortkey,
     't|time=s'       => \$span,
     'v|version'      => \$version,
@@ -97,6 +98,7 @@ print_help() if $help;
 print_version() if $version;
 
 my @logfiles;
+push(@log, '/var/log/apache2/error*log', '/var/log/apache2/*/error*log') if !@log;
 map { push(@logfiles, glob($_)) } @log;
 
 my $now = time();
@@ -104,12 +106,14 @@ $span *= 5;
 POSIX::setlocale(POSIX::LC_ALL, 'C'); # Use . as decimal separator
 
 my %stat;
+my $lognb = 0;
 foreach (@logfiles) {
     my $lh;
     if (!open($lh, "<$_")) {
         warn "$_: $!";
         next;
     }
+    $lognb++;
 
     while (<$lh>) {
         chomp;
@@ -118,14 +122,15 @@ foreach (@logfiles) {
         next if not /\bphptop ([^ ]+) (.*)/;
 
         my ($uri, $pairs) = ($1, $2);
-	$uri =~ s/index\.php\/?//;  # / == /index.php (99.9% of the time)
+        $uri =~ s/index\.php\/?//;  # / == /index.php (99.9% of the time)
         $uri =~ s/\?.*// if not defined $full_query;
+        $uri =~ s/^https?:\/\/[^\/]+// if defined $path_only;
 
         # Only keep records within expected time span. If a time stamp is not found or
-	# cannot be parsed, we still process the item.
+        # cannot be parsed, we still process the item.
         if (/^\[(.*?)\]/) {
-	    my $stamp = str2time($1);
-	    next if defined $stamp && ($now - $stamp) > $span;
+        my $stamp = str2time($1);
+        next if defined $stamp && ($now - $stamp) > $span;
         }
 
         # For each 'key:<numeric val>' sum the numeric value per URI
@@ -145,8 +150,19 @@ foreach (@logfiles) {
     close($lh);
 }
 
+if ($lognb == 0) {
+    print STDERR "Error: no log files found. Path/globs tried: ".join(", ", @log)."\n";
+    exit 2;
+}
+
+my @hits = values %stat;
+if (not @hits) {
+    print STDERR "No phptop records found.\n";
+    exit 0;
+}
+
 # Convert memory and include values from total to 'per hit', more useful and meaningful
-foreach (values %stat) {
+foreach (@hits) {
     $_->{'mem_max'} /= 2**20;  # Also scale memory values from bytes to MB
     $_->{'mem'} /= $_->{'hit'} * 2**20;
     $_->{'inc'} /= $_->{'hit'};
