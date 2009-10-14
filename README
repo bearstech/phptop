@@ -12,7 +12,7 @@ Homepage, more documentation and updates:
 
 Example usage:
 
-  server:~# echo auto_prepend_file=/path/to/phptop_hook.php >/etc/php/php.ini
+  server:~# echo auto_prepend_file=/path/to/phptop_hook.php >>/etc/php/php.ini
   server:~# apache2ctl reload
 
   (Wait at least a few minutes to collect data...)

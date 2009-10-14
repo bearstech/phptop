@@ -3,6 +3,7 @@ phptop 0.2 - 2009-10-14
 	* Warn if no logfile is found (and fails)
 	* Warn if no record is found (not an error)
 	* Added -p|--path-only option
+    * Doc fix: >>php.ini instead of >php.ini overwriting (!)
 
 phptop 0.1 - 2009-10-14
 
