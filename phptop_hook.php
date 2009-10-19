@@ -33,7 +33,7 @@ function _phptop_fini() {
 
   $inc   = count(get_included_files());
 
-  $proto = $_SERVER['HTTPS'] != '' ? 'https' : 'http';
+  $proto = isset($_SERVER['HTTPS']) ? 'https' : 'http';
   $vhost = $_SERVER['SERVER_NAME'];
   $uri   = $_SERVER['REQUEST_URI'];
   $self  = $proto != '' ? "$proto://$vhost$uri" : $_SERVER['SCRIPT_FILENAME'];
