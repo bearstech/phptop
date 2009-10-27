@@ -1,10 +1,10 @@
-phptop 0.2 - 2009-10-14
+phptop 0.2 - 2009-10-20
 
 	* Warn if no logfile is found (and fails)
 	* Warn if no record is found (not an error)
 	* Added -p|--path-only option
-    * Doc fix: >>php.ini instead of >php.ini overwriting
-    * Exception fix on untested $_SERVER['HTTPS'] existence (thanks E. Mazurier)
+	* Doc fix: >>php.ini instead of >php.ini overwriting
+	* Exception fix on untested $_SERVER['HTTPS'] existence (thanks E. Mazurier)
 
 phptop 0.1 - 2009-10-14
 
