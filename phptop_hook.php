@@ -17,6 +17,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+function _phptop_init() {
+  global $_phptop_t0;
+  $t0 = microtime(TRUE);
+  $ru = getrusage();
+  $_phptop_t0 = array(
+    'time' => $t0,
+    'tusr' => $ru['ru_utime.tv_sec'] + $ru['ru_utime.tv_usec'] / 1e6,
+    'tsys' => $ru['ru_stime.tv_sec'] + $ru['ru_stime.tv_usec'] / 1e6
+  );
+  register_shutdown_function('_phptop_fini');
+}
+
 function _phptop_fini() {
   global $_phptop_disable;
   if ($_phptop_disable) return;
@@ -41,13 +53,6 @@ function _phptop_fini() {
   error_log(str_replace(',', '.', "phptop $self time:$time user:$tusr sys:$tsys mem:$mem inc:$inc"));
 }
 
-global $_phptop_t0;
-$t0 = microtime(TRUE);
-$ru = getrusage();
-$_phptop_t0 = array(
-  'time' => $t0,
-  'tusr' => $ru['ru_utime.tv_sec'] + $ru['ru_utime.tv_usec'] / 1e6,
-  'tsys' => $ru['ru_stime.tv_sec'] + $ru['ru_stime.tv_usec'] / 1e6
-);
-register_shutdown_function('_phptop_fini');
+/* Don't run in CLI, it pollutes stderr and makes cronjob un-needingly noisy */
+if (php_sapi_name() != 'cli') _phptop_init();
 ?>

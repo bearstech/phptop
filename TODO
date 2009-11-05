@@ -4,3 +4,4 @@
   (very useful with HTML mode, eg. generate a full report every hour)
 - Handle gzipped logs (easy, but useful ?)
 - Handle log from stdin (easy, but useful ?)
+- Use 'tac' to parse logs if available (faster)
