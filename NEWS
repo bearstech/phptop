@@ -1,3 +1,7 @@
+phptop 0.3 - unreleased
+
+	*
+
 phptop 0.2.1 - 2009-11-05
 
 	* Don't run hook in CLI mode, it pollutes stderr and makes cronjobs noisy 

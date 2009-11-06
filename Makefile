@@ -17,7 +17,9 @@ deb:
 debclean:
 	fakeroot debian/rules clean
 
-
 debupload:
 	rsync -z ../phptop_*.deb builder@deb.bearstech.com:~/src/phptop/
 	ssh builder@deb.bearstech.com make -C www phptop
+
+deploy:
+	foreach -e 'dpkg -l phptop 2>/dev/null|egrep ^i >/dev/null && aptitude update >/dev/null && apt-get --force-yes -y -q=2 install phptop'
