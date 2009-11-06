@@ -1,4 +1,3 @@
-- More strict log checking with mandatory keys
 - Limit URI column width
 - HTML output mode
 - Allow many -s options to generate multiple reports in one pass

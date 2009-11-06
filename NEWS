@@ -1,25 +1,28 @@
-phptop 0.3 - unreleased
+phptop 0.2.2 - 2009-11-06
 
-	* Fixed per URL hit counter, was totally bogus (over-estimated)
+    * Fixed per URL hit counter, was totally bogus (over-estimated)
     * More strict log checking with 5 mandatory key:value pairs
       (PHP or Apache seem to wrap single input strint to multiple log
        lines sometimes)
+    * Reject whole record if a single key/value pair is bogus
+    * Warn if more than 5% bogus records found (I see rhoughy 0.2% on
+      very busy servers)
     * More elegant global hits/sample counter
     * phptop_hook: switching to explicit formating and locale-independent
       %F formater - hoping it will help with the log wrapping
 
 phptop 0.2.1 - 2009-11-05
 
-	* Don't run hook in CLI mode, it pollutes stderr and makes cronjobs noisy 
+    * Don't run hook in CLI mode, it pollutes stderr and makes cronjobs noisy 
 
 phptop 0.2 - 2009-10-20
 
-	* Warn if no logfile is found (and fails)
-	* Warn if no record is found (not an error)
-	* Added -p|--path-only option
-	* Doc fix: >>php.ini instead of >php.ini overwriting
-	* Exception fix on untested $_SERVER['HTTPS'] existence (thanks E. Mazurier)
+    * Warn if no logfile is found (and fails)
+    * Warn if no record is found (not an error)
+    * Added -p|--path-only option
+    * Doc fix: >>php.ini instead of >php.ini overwriting
+    * Exception fix on untested $_SERVER['HTTPS'] existence (thanks E. Mazurier)
 
 phptop 0.1 - 2009-10-14
 
-	* Initial release
+    * Initial release
