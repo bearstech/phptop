@@ -16,6 +16,7 @@ deb:
 
 debclean:
 	fakeroot debian/rules clean
+	rm build
 
 debupload:
 	rsync -z ../phptop_*.deb builder@deb.bearstech.com:~/src/phptop/

@@ -35,7 +35,7 @@ function _phptop_fini() {
 
   global $_phptop_t0;
   $t1   = microtime(TRUE);
-  $time = sprintf('%.6f', $t1 - $_phptop_t0['time']);
+  $time = $t1 - $_phptop_t0['time'];
 
   $ru = getrusage();
   $tusr = $ru['ru_utime.tv_sec'] + $ru['ru_utime.tv_usec'] / 1e6 - $_phptop_t0['tusr'];
@@ -48,9 +48,10 @@ function _phptop_fini() {
   $proto = isset($_SERVER['HTTPS']) ? 'https' : 'http';
   $vhost = $_SERVER['SERVER_NAME'];
   $uri   = $_SERVER['REQUEST_URI'];
-  $self  = $proto != '' ? "$proto://$vhost$uri" : $_SERVER['SCRIPT_FILENAME'];
+  $self  = $vhost != '' ? "$proto://$vhost$uri" : $_SERVER['SCRIPT_FILENAME'];
 
-  error_log(str_replace(',', '.', "phptop $self time:$time user:$tusr sys:$tsys mem:$mem inc:$inc"));
+  $msg = sprintf("phptop %s time:%.6F user:%.6F sys:%.6F mem:%g inc:%g\n", $self, $time, $tusr, $tsys, $mem, $inc);
+  error_log($msg);
 }
 
 /* Don't run in CLI, it pollutes stderr and makes cronjob un-needingly noisy */

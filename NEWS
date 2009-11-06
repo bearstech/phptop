@@ -5,6 +5,8 @@ phptop 0.3 - unreleased
       (PHP or Apache seem to wrap single input strint to multiple log
        lines sometimes)
     * More elegant global hits/sample counter
+    * phptop_hook: switching to explicit formating and locale-independent
+      %F formater - hoping it will help with the log wrapping
 
 phptop 0.2.1 - 2009-11-05
 
