@@ -1,6 +1,10 @@
 phptop 0.3 - unreleased
 
-	*
+	* Fixed per URL hit counter, was totally bogus (over-estimated)
+    * More strict log checking with 5 mandatory key:value pairs
+      (PHP or Apache seem to wrap single input strint to multiple log
+       lines sometimes)
+    * More elegant global hits/sample counter
 
 phptop 0.2.1 - 2009-11-05
 

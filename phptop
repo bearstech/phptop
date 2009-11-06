@@ -107,6 +107,7 @@ POSIX::setlocale(POSIX::LC_ALL, 'C'); # Use . as decimal separator
 
 my %stat;
 my $lognb = 0;
+my $hits  = 0;
 foreach (@logfiles) {
     my $lh;
     if (!open($lh, "<$_")) {
@@ -129,22 +130,30 @@ foreach (@logfiles) {
         # Only keep records within expected time span. If a time stamp is not found or
         # cannot be parsed, we still process the item.
         if (/^\[(.*?)\]/) {
-        my $stamp = str2time($1);
-        next if defined $stamp && ($now - $stamp) > $span;
+            my $stamp = str2time($1);
+            next if defined $stamp && ($now - $stamp) > $span;
         }
 
+        # Protect against bogus/wrapped phptop records, count pairs
+        my @kv = split(/ /, $pairs);
+        next if @kv < 5;
+
         # For each 'key:<numeric val>' sum the numeric value per URI
-        foreach (split(/ /, $pairs)) {
+        foreach (@kv) {
             my ($key, $val) = split(/:/, $_);
+            $stat{$uri}{$key} += $val;
+
+            # Compute max for some values (mem, inc)
             if ($key eq 'mem') {
                 $stat{$uri}{'mem_max'} = $val if ($stat{$uri}{'mem_max'} || 0) < $val;
             }
-            if ($key eq 'inc') {
+            elsif ($key eq 'inc') {
                 $stat{$uri}{'inc_max'} = $val if ($stat{$uri}{'inc_max'} || 0) < $val;
             }
-            $stat{$uri}{'hit'}++;
-            $stat{$uri}{$key} += $val;
         }
+
+        $stat{$uri}{'hit'}++;
+        $hits++;
     }
 
     close($lh);
@@ -154,18 +163,16 @@ if ($lognb == 0) {
     print STDERR "Error: no log files found. Path/globs tried: ".join(", ", @log)."\n";
     exit 2;
 }
-
-my @hits = values %stat;
-if (not @hits) {
+if ($hits == 0) {
     print STDERR "No phptop records found.\n";
     exit 0;
 }
 
 # Convert memory and include values from total to 'per hit', more useful and meaningful
-foreach (@hits) {
-    $_->{'mem_max'} /= 2**20;  # Also scale memory values from bytes to MB
-    $_->{'mem'} /= $_->{'hit'} * 2**20;
-    $_->{'inc'} /= $_->{'hit'};
+while (my ($url, $i) = each %stat) {
+    $i->{'mem_max'} /= 2**20;  # Also scale memory values from bytes to MB
+    $i->{'mem'} /= $i->{'hit'} * 2**20;
+    $i->{'inc'} /= $i->{'hit'};
 }
 
 # Sort queries according to $sortkey (they are all numeric)
