@@ -1,3 +1,8 @@
+phptop 0.3 - unreleased
+
+    * Fixed an awful bug about timespan being 5x than necessary (forgot debug code)
+    * Refactored code with functions and less globals
+
 phptop 0.2.2 - 2009-11-06
 
     * Fixed per URL hit counter, was totally bogus (over-estimated)

@@ -25,19 +25,26 @@ use HTTP::Date;
 use POSIX;
 
 my $package_name    = 'phptop';
-my $package_version = '0.2.2';
+my $package_version = '0.3-dev';
 my $package_owner   = 'Copyright (C) 2009 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
-
+# Options
 my $help;
 my $version;
 my @log;
 my $full_query;
 my $count = 10;
-my $sortkey = 'hit';
+my $sortkeys = 'hit';
 my $span = 60;
 my $path_only;
+
+# Globals
+my @keys = qw/hit time user sys mem mem_max inc inc_max/;
+my %stat;
+my $now   = time();
+my $hits  = 0;
+my $bogus = 0;
 
 
 sub print_short_help {
@@ -54,14 +61,14 @@ sub print_help {
 Usage: $package_name [options]
 
 Options:
-  -c, --count N    Limit output to top N URIs (default is $count)
-  -f, --full-query Consider full URI with CGI parameters
-  -h, --help       Display this information
-  -l, --log path   Logfiles to parse, you may use several -l and wildcards
-  -p, --path-only  Only print path, skip http://host
-  -s, --sort key   Sort key: hit, time, user, sys, mem or inc (default is $sortkey)
-  -t, --time N     Consider log events from now back to N minutes (default is $span)
-  -v, --version    Display version number and copyright info
+  -c, --count N        Limit output to top N URIs (default is $count)
+  -f, --full-query     Consider full URI with CGI parameters
+  -h, --help           Display this information
+  -l, --log path       Logfiles to parse, you may use several -l and wildcards
+  -p, --path-only      Only print path, skip http://host
+  -s, --sort key,...   Sort key: hit, time, user, sys, mem or inc (default is $sortkeys)
+  -t, --time N         Consider log events from now back to N minutes (default is $span)
+  -v, --version        Display version number and copyright info
 
 Columns explanation:
   Hit       Number of queries
@@ -81,41 +88,14 @@ sub print_version {
     exit 0;
 }
 
+sub parse_log {
+    my $logfile = shift;
 
-GetOptions(
-    'c|count=i'      => \$count,
-    'f|full-query'   => \$full_query,
-    'h|help'         => \$help,
-    'l|log=s'        => \@log,
-    'p|path'         => \$path_only,
-    's|sort=s'       => \$sortkey,
-    't|time=s'       => \$span,
-    'v|version'      => \$version,
-)
-or print_short_help();
-
-print_help() if $help;
-print_version() if $version;
-
-my @logfiles;
-push(@log, '/var/log/apache2/error*log', '/var/log/apache2/*/error*log') if !@log;
-map { push(@logfiles, glob($_)) } @log;
-
-my $now = time();
-$span *= 5;
-POSIX::setlocale(POSIX::LC_ALL, 'C'); # Use . as decimal separator
-
-my %stat;
-my $lognb = 0;
-my $hits  = 0;
-my $bogus = 0;
-foreach (@logfiles) {
     my $lh;
-    if (!open($lh, "<$_")) {
-        warn "$_: $!";
-        next;
+    if (!open($lh, "<$logfile")) {
+        warn "$logfile: $!";
+        return 0;
     }
-    $lognb++;
 
   LINE:
     while (<$lh>) {
@@ -166,10 +146,79 @@ foreach (@logfiles) {
     }
 
     close($lh);
+    1;
 }
 
-if ($lognb == 0) {
-    print STDERR "Error: no log files found. Path/globs tried: ".join(", ", @log)."\n";
+sub fix_stat {
+    # Convert memory and include values from total to 'per hit', more useful and meaningful
+    while (my ($url, $i) = each %stat) {
+        $i->{'mem_max'} /= 2**20;  # Also scale memory values from bytes to MB
+        $i->{'mem'} /= $i->{'hit'} * 2**20;
+        $i->{'inc'} /= $i->{'hit'};
+    }
+}
+
+sub text_report {
+    my $sortkey = shift;
+
+    # Sort queries according to $sortkey (they are all numeric)
+    my @sorted = sort { $stat{$b}{$sortkey} - $stat{$a}{$sortkey} } keys %stat;
+    
+    # Compute URI column width
+    my $width = 0;
+    my $n = 0;
+    foreach (@sorted) {
+        last if $n++ >= $count;
+        my $w = length($_);
+        $width = $w if $w > $width;
+    }
+    
+    my %total;
+    my @tkeys = qw/hit time user sys/;
+    $n = 0;
+    
+    printf("%-${width}s %s\n", "", join(' ', map { sprintf('%8s', ucfirst($_ =~ /^(mem|inc)$/ ? "$_/hit" : $_)) } @keys));
+    foreach (@sorted) {
+        my $s = $stat{$_};
+        $total{$_} += $s->{$_} foreach @tkeys;
+        next if $n++ >= $count; # Continue to loop and only sum totals if $count records have been displayed
+    
+        printf("%-${width}s", $_);
+        printf($_ =~ m/hit|inc/ ? ' %8d' : ' %8.1f', $s->{$_}) foreach @keys;
+        print "\n";
+    }
+    printf("\n%-${width}s", 'Total');
+    printf($_ =~ m/hit/ ? ' %8d' : ' %8.1f', $total{$_}) foreach @tkeys;
+    print "\n";
+}
+
+
+GetOptions(
+    'c|count=i'      => \$count,
+    'f|full-query'   => \$full_query,
+    'h|help'         => \$help,
+    'l|log=s'        => \@log,
+    'p|path'         => \$path_only,
+    's|sort=s'       => \$sortkeys,
+    't|time=s'       => \$span,
+    'v|version'      => \$version,
+)
+or print_short_help();
+
+print_help() if $help;
+print_version() if $version;
+
+POSIX::setlocale(POSIX::LC_ALL, 'C'); # Use . as decimal separator
+
+my @logfiles;
+push(@log, '/var/log/apache2/error*log', '/var/log/apache2/*/error*log') if !@log;
+map { push(@logfiles, glob($_)) } @log;
+
+my $parsed = 0;
+$parsed += parse_log($_) foreach @logfiles;
+
+if ($parsed == 0) {
+    print STDERR "Error: no log files found/processed. Tried: ".join(", ", @log)."\n";
     exit 2;
 }
 if ($hits == 0) {
@@ -180,40 +229,7 @@ if ($bogus >= $hits * .05) {
     print STDERR "Warning: you have more than 5% malformed records ($bogus out of $hits).\n";
 }
 
-# Convert memory and include values from total to 'per hit', more useful and meaningful
-while (my ($url, $i) = each %stat) {
-    $i->{'mem_max'} /= 2**20;  # Also scale memory values from bytes to MB
-    $i->{'mem'} /= $i->{'hit'} * 2**20;
-    $i->{'inc'} /= $i->{'hit'};
-}
+fix_stat();
 
-# Sort queries according to $sortkey (they are all numeric)
-my @keys = qw/hit time user sys mem mem_max inc inc_max/;
-my @sorted = sort { $stat{$b}{$sortkey} - $stat{$a}{$sortkey} } keys %stat;
-
-# Compute URI column width
-my $width = 0;
-my $n = 0;
-foreach (@sorted) {
-    last if $n++ >= $count;
-    my $w = length($_);
-    $width = $w if $w > $width;
-}
-
-my %total;
-my @tkeys = qw/hit time user sys/;
-$n = 0;
-
-printf("%-${width}s %s\n", "", join(' ', map { sprintf('%8s', ucfirst($_ =~ /^(mem|inc)$/ ? "$_/hit" : $_)) } @keys));
-foreach (@sorted) {
-    my $s = $stat{$_};
-    $total{$_} += $s->{$_} foreach @tkeys;
-    next if $n++ >= $count; # Continue to loop and only sum totals if $count records have been displayed
-
-    printf("%-${width}s", $_);
-    printf($_ =~ m/hit|inc/ ? ' %8d' : ' %8.1f', $s->{$_}) foreach @keys;
-    print "\n";
-}
-printf("\n%-${width}s", 'Total');
-printf($_ =~ m/hit/ ? ' %8d' : ' %8.1f', $total{$_}) foreach @tkeys;
-print "\n";
+my @sortkeyl = split(/,/, $sortkeys);
+text_report($_) foreach @sortkeyl;
