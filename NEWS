@@ -1,7 +1,9 @@
 phptop 0.3 - unreleased
 
-    * Fixed an awful bug about timespan being 5x than necessary (forgot debug code)
+    * Fixed an awful bug about timespan being 12x less than necessary
     * Refactored code with functions and less globals
+    * Changed default time span from 1h to 10min
+    * Reordered parsing regexes for more logical and faster result
 
 phptop 0.2.2 - 2009-11-06
 

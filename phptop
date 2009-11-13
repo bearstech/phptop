@@ -36,7 +36,7 @@ my @log;
 my $full_query;
 my $count = 10;
 my $sortkeys = 'hit';
-my $span = 60;
+my $span = 10;
 my $path_only;
 
 # Globals
@@ -100,29 +100,30 @@ sub parse_log {
   LINE:
     while (<$lh>) {
         chomp;
-        s/(\d),(\d)/$1.$2/g; # Be independent of the PHP locale, normalize on dot decimal separator
-        s/, referer.*//;     # Apache may append a referer in error.log, ignore
         next if not /\bphptop ([^ ]+) (.*)/;
-
         my ($uri, $pairs) = ($1, $2);
-        $uri =~ s/index\.php\/?//;  # / == /index.php (99.9% of the time)
-        $uri =~ s/\?.*// if not defined $full_query;
-        $uri =~ s/^https?:\/\/[^\/]+// if defined $path_only;
 
         # Only keep records within expected time span. If a time stamp is not found or
         # cannot be parsed, we still process the item.
         if (/^\[(.*?)\]/) {
             my $stamp = str2time($1);
-            next if defined $stamp && ($now - $stamp) > $span;
+            next if defined $stamp && ($now - $stamp) > $span * 60;
         }
 
-        # Protect against bogus/wrapped phptop records, count pairs
+        $pairs =~ s/, referer.*//;     # Apache may append a referer in error.log, ignore
+        $pairs =~ s/(\d),(\d)/$1.$2/g; # Be independent of the PHP locale, normalize on dot decimal separator
         my @kv = split(/ /, $pairs);
-        next if @kv < 5;
+        next if @kv < 5;               # Protect against bogus/wrapped phptop records, count pairs
+
+        # Fix URIs (depending on options)
+        $uri =~ s/index\.php\/?//;  # / == /index.php (99.9% of the time)
+        $uri =~ s/\?.*// if not defined $full_query;
+        $uri =~ s/^https?:\/\/[^\/]+// if defined $path_only;
 
         # For each 'key:<numeric val>' sum the numeric value per URI
         foreach (@kv) {
             my ($key, $val) = split(/:/, $_);
+
             # If we have a bogus key/value pair, zap the whole record
             if ($key eq '' or not defined $val) {
                 delete $stat{$uri};
