@@ -1,6 +1,7 @@
 phptop 0.4 - unreleased
 
     * Added reverse parsing based on 'tac', way faster on heavy logs
+    * Showing time span in the 'Total' line, more explicit reporting
 
 phptop 0.3.1 - 2009-11-13
 

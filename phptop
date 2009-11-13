@@ -211,7 +211,7 @@ sub text_report {
         printf($_ =~ m/hit|inc/ ? ' %8d' : ' %8.1f', $s->{$_}) foreach @keys;
         print "\n";
     }
-    printf("\n%-${width}s", 'Total');
+    printf("\n%-${width}s", "Total (from last $span min)");
     printf($_ =~ m/hit/ ? ' %8d' : ' %8.1f', $total{$_}) foreach @tkeys;
     print "\n";
 }
