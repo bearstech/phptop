@@ -80,7 +80,7 @@ Columns explanation:
   Inc/hit   Average included files per query
   Inc_max   Maximum included files across queries
 EOF
-    exit 0
+    exit 0;
 }
 
 sub print_version {
@@ -123,8 +123,8 @@ no warnings;
             my $skip = defined $stamp && ($now - $stamp) > $span * 60;
 
             if ($reverse and $skip) {
-                # Reverse parsing: exit loop when at least N out of time records
-                # have been seen (make up for unordered log entries)
+                # Reverse parsing: exit loop when at least 10 out of time records
+                # have been seen (to cope with unordered log entries)
                 $revmiss++;
                 last LINE if $revmiss > 9;
             }
