@@ -25,7 +25,7 @@ use HTTP::Date;
 use POSIX;
 
 my $package_name    = 'phptop';
-my $package_version = '0.3';
+my $package_version = '0.3.1';
 my $package_owner   = 'Copyright (C) 2009 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
@@ -125,7 +125,7 @@ sub parse_log {
             my ($key, $val) = split(/:/, $_);
 
             # If we have a bogus key/value pair, zap the whole record
-            if ($key eq '' or not defined $val) {
+            if ($key eq '' or not defined $val or not $val =~ /^[0-9.]+$/) {
                 delete $stat{$uri};
                 $bogus++;
                 next LINE;
