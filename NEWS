@@ -1,9 +1,10 @@
-phptop 0.3 - unreleased
+phptop 0.3 - 2009-11-13
 
     * Fixed an awful bug about timespan being 12x less than necessary
     * Refactored code with functions and less globals
     * Changed default time span from 1h to 10min
     * Reordered parsing regexes for more logical and faster result
+    * Now -s accepts mutiple keys and output one report per sort key
 
 phptop 0.2.2 - 2009-11-06
 

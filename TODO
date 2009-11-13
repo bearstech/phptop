@@ -1,5 +1,3 @@
 - Limit URI column width
 - HTML output mode
-- Allow many -s options to generate multiple reports in one pass
-  (very useful with HTML mode, eg. generate a full report every hour)
 - Use 'tac' to parse logs if available (faster)

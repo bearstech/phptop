@@ -25,7 +25,7 @@ use HTTP::Date;
 use POSIX;
 
 my $package_name    = 'phptop';
-my $package_version = '0.3-dev';
+my $package_version = '0.3';
 my $package_owner   = 'Copyright (C) 2009 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
@@ -151,10 +151,10 @@ sub parse_log {
 }
 
 sub fix_stat {
-    # Convert memory and include values from total to 'per hit', more useful and meaningful
+    # Convert 'mem'  and 'inc' values from total to 'per hit', more useful and meaningful
     while (my ($url, $i) = each %stat) {
-        $i->{'mem_max'} /= 2**20;  # Also scale memory values from bytes to MB
-        $i->{'mem'} /= $i->{'hit'} * 2**20;
+        $i->{'mem_max'} /= 2**20;            # Also scale memory values from bytes to MB
+        $i->{'mem'} /= $i->{'hit'} * 2**20;  # Idem
         $i->{'inc'} /= $i->{'hit'};
     }
 }
@@ -233,4 +233,9 @@ if ($bogus >= $hits * .05) {
 fix_stat();
 
 my @sortkeyl = split(/,/, $sortkeys);
-text_report($_) foreach @sortkeyl;
+
+my $reportnb = 0;
+foreach (@sortkeyl) {
+  print "--\n" if $reportnb++;
+  text_report($_);
+}
