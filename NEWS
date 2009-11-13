@@ -1,3 +1,7 @@
+phptop 0.4 - unreleased
+
+    * Added reverse parsing based on 'tac', way faster on heavy logs
+
 phptop 0.3.1 - 2009-11-13
 
     * Be more robust about parsing values, only keep numeric ones

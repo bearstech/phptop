@@ -25,7 +25,7 @@ use HTTP::Date;
 use POSIX;
 
 my $package_name    = 'phptop';
-my $package_version = '0.3.1';
+my $package_version = '0.4-dev';
 my $package_owner   = 'Copyright (C) 2009 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
@@ -92,10 +92,23 @@ sub parse_log {
     my $logfile = shift;
 
     my $lh;
-    if (!open($lh, "<$logfile")) {
+    my $reverse = 0;
+    my $revmiss = 0;
+
+    # Try to open logfile in 'reverse' mode first, using 'tac'
+    # (trying to parse less lines and hence being much faster)
+{
+# It's okay for open(tac|) to fail, and we handle the other open errors explicitly
+no warnings;
+
+    if (open($lh, "tac $logfile |")) {
+        $reverse = 1;
+    }
+    elsif (!open($lh, "<$logfile")) {
         warn "$logfile: $!";
         return 0;
     }
+}
 
   LINE:
     while (<$lh>) {
@@ -107,7 +120,17 @@ sub parse_log {
         # cannot be parsed, we still process the item.
         if (/^\[(.*?)\]/) {
             my $stamp = str2time($1);
-            next if defined $stamp && ($now - $stamp) > $span * 60;
+            my $skip = defined $stamp && ($now - $stamp) > $span * 60;
+
+            if ($reverse and $skip) {
+                # Reverse parsing: exit loop when at least N out of time records
+                # have been seen (make up for unordered log entries)
+                $revmiss++;
+                last LINE if $revmiss > 9;
+            }
+            # Forward parsing: skip record until we are in the right time window.
+            # We also obviously skip the record in reverse mode.
+            next LINE if $skip;
         }
 
         $pairs =~ s/, referer.*//;     # Apache may append a referer in error.log, ignore
