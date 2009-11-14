@@ -25,7 +25,7 @@ use HTTP::Date;
 use POSIX;
 
 my $package_name    = 'phptop';
-my $package_version = '0.4';
+my $package_version = '0.4.1-dev';
 my $package_owner   = 'Copyright (C) 2009 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
@@ -259,6 +259,6 @@ my @sortkeyl = split(/,/, $sortkeys);
 
 my $reportnb = 0;
 foreach (@sortkeyl) {
-  print "--\n" if $reportnb++;
-  text_report($_);
+    print "--\n" if $reportnb++;
+    text_report($_);
 }
