@@ -7,7 +7,7 @@ Homepage: http://forge.bearstech.com/trac/wiki/PhpTop
 
 Package: phptop
 Architecture: all
-Depends: perl (>= 5.8), libwww-perl, ${shlibs:Depends}, ${misc:Depends}
+Depends: perl (>= 5.8), libwww-perl, libterm-size-perl, ${shlibs:Depends}, ${misc:Depends}
 Recommends: php5-cgi|libapache2-mod-php5|libapache2-mod-php5filter
 Description: php5 resource statistics tool
  phptop prints per query and average metrics of resource taken by PHP5 scripts
