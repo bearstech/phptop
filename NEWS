@@ -1,6 +1,6 @@
-phptop 0.4.1 - unreleased
+phptop 0.4.1 - 2009-11-21
 
-    * Now terminal size aware, overridable with COLUMNS env
+    * Now terminal size aware, overridable with COLUMNS env var
 
 phptop 0.4 - 2009-11-14
 
