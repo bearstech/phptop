@@ -1,3 +1,12 @@
+phptop 0.5 - Unreleased
+
+    * Showing sorting column with '>' on text output
+    * Now checking that -t <value> is numeric
+    * Fixed sorting which was not reliable (use proper <=> numeric comparison
+      operator)
+    * Using exactly one print per line (better buffering for large outputs
+      or slow links)
+
 phptop 0.4.1 - 2009-11-21
 
     * Now terminal size aware, overridable with COLUMNS env var

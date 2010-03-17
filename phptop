@@ -24,9 +24,10 @@ use Getopt::Long qw(:config no_auto_abbrev no_ignore_case bundling);
 use HTTP::Date;
 use POSIX;
 use Term::Size;
+use HTML::Template;
 
 my $package_name    = 'phptop';
-my $package_version = '0.4.1';
+my $package_version = '0.5-dev';
 my $package_owner   = 'Copyright (C) 2009 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
@@ -196,7 +197,7 @@ sub text_report {
     die "Terminal width to short, try cheating with COLUMNS env var." if $colmax < 16;
 
     # Sort queries according to $sortkey (they are all numeric)
-    my @sorted = sort { $stat{$b}{$sortkey} - $stat{$a}{$sortkey} } keys %stat;
+    my @sorted = sort { $stat{$b}{$sortkey} <=> $stat{$a}{$sortkey} } keys %stat;
  
     # Compute URL column width
     my $width = 0;
@@ -208,8 +209,18 @@ sub text_report {
     }
     $width = $colmax if $width > $colmax;
 
+    # Header
+    my @headers = map {
+        my $h = $_;
+        $h = "$h/hit" if /^(mem|inc)$/;  # Mem and Inc are per-hit values
+        $h = ucfirst $h;
+        $h = ">$h" if $_ eq $sortkey;    # Use '>' to show sorting column
+        sprintf('%8s', $h);
+    } @keys;
+    printf("%-${width}s %s\n", "", join(' ', @headers));
+
+    # Rows
     $n = 0;
-    printf("%-${width}s %s\n", "", join(' ', map { sprintf('%8s', ucfirst($_ =~ /^(mem|inc)$/ ? "$_/hit" : $_)) } @keys));
     foreach my $url (@sorted) {
         my $s = $stat{$url};
         $total{$_} += $s->{$_} foreach @tkeys;
@@ -219,13 +230,14 @@ sub text_report {
         if ($ul > $width) {
             $url = substr($url, 0, $width - 3).'...';
         }
-        printf("%-${width}s", $url);
-        printf($_ =~ m/hit|inc/ ? ' %8d' : ' %8.1f', $s->{$_}) foreach @keys;
-        print "\n";
+        my $row = sprintf("%-${width}s", $url);
+        $row   .= sprintf($_ =~ m/hit|inc/ ? ' %8d' : ' %8.1f', $s->{$_}) foreach @keys;
+        print "$row\n";
     }
-    printf("\n%-${width}s", "Total (from last $span min)");
-    printf($_ =~ m/hit/ ? ' %8d' : ' %8.1f', $total{$_}) foreach @tkeys;
-    print "\n";
+
+    my $footer = sprintf("\n%-${width}s", "Total (from last $span min)");
+    $footer   .= sprintf($_ =~ m/hit/ ? ' %8d' : ' %8.1f', $total{$_}) foreach @tkeys;
+    print "$footer\n";
 }
 
 
@@ -236,7 +248,7 @@ GetOptions(
     'l|log=s'        => \@log,
     'p|path'         => \$path_only,
     's|sort=s'       => \$sortkeys,
-    't|time=s'       => \$span,
+    't|time=i'       => \$span,
     'v|version'      => \$version,
 )
 or print_short_help();
@@ -244,7 +256,7 @@ or print_short_help();
 print_help() if $help;
 print_version() if $version;
 
-POSIX::setlocale(POSIX::LC_ALL, 'C'); # Use . as decimal separator
+POSIX::setlocale(POSIX::LC_NUMERIC, 'C'); # Use . as decimal separator
 
 my @logfiles;
 push(@log, '/var/log/apache2/error*log', '/var/log/apache2/*/error*log') if !@log;
