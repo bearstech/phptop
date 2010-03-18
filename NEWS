@@ -1,4 +1,4 @@
-phptop 0.5 - Unreleased
+phptop 0.5 - 2010-03-19
 
     * New -o|--output-mode option, refactored reporting internally
     * New HTML output support
