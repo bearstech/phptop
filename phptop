@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # phptop - Analyse quickly system ressource usage across many PHP queries
-# Copyright (C) 2009 Bearstech - http://bearstech.com/
+# Copyright (C) 2009,2010 Bearstech - http://bearstech.com/
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Depends on LWP aka libwww-perl (what else ?)
-
 use strict;
 use warnings;
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case bundling);
@@ -28,7 +26,7 @@ use HTML::Template;
 
 my $package_name    = 'phptop';
 my $package_version = '0.5-dev';
-my $package_owner   = 'Copyright (C) 2009 Bearstech - http://bearstech.com/';
+my $package_owner   = 'Copyright (C) 2009,2010 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
 # Options
@@ -36,10 +34,10 @@ my $help;
 my $version;
 my @log;
 my $full_query;
-my $count = 10;
-my @sortkeys;
-my $span = 10;
 my $path_only;
+my @sortkeys;
+my $count  = 10;
+my $span   = 10;
 my $output = 'text';
 
 # Globals
@@ -48,6 +46,7 @@ my %stat;
 my $now   = time();
 my $hits  = 0;
 my $bogus = 0;
+
 
 sub print_short_help {
     print STDERR <<EOF;
@@ -70,7 +69,7 @@ Options:
   -o, --output mode    Output mode: text or html (default is $output);
   -p, --path-only      Only print path, skip http://host
   -s, --sort key       Sort key: hit, time, user, sys or mem (default is @sortkeys)
-  -t, --time N         Consider log events from now back to N minutes (default is $span)
+  -t, --time N         Parse data from now back to N minutes (default is $span)
   -v, --version        Display version number and copyright info
 
 The -s option can be used multiple times to generate several reports in one go.
@@ -91,6 +90,8 @@ sub print_version {
     exit 0;
 }
 
+# parse_log() is called for every log files and fills up the global %stat hash
+#
 sub parse_log {
     my $logfile = shift;
 
@@ -100,18 +101,20 @@ sub parse_log {
 
     # Try to open logfile in 'reverse' mode first, using 'tac'
     # (trying to parse less lines and hence being much faster)
-{
-# It's okay for open(tac|) to fail, and we handle the other open errors explicitly
-no warnings;
+    {
+        # It's okay for open(tac|) to fail, and we handle the other open errors explicitly
+        no warnings;
+    
+        if (open($lh, "tac $logfile |")) {
+            $reverse = 1;
+        }
+        elsif (!open($lh, "<$logfile")) {
+            warn "$logfile: $!";
+            return 0;
+        }
+    }
 
-    if (open($lh, "tac $logfile |")) {
-        $reverse = 1;
-    }
-    elsif (!open($lh, "<$logfile")) {
-        warn "$logfile: $!";
-        return 0;
-    }
-}
+    POSIX::setlocale(POSIX::LC_NUMERIC, 'C'); # Use . as decimal separator
 
   LINE:
     while (<$lh>) {
@@ -173,6 +176,8 @@ no warnings;
     1;
 }
 
+# fix_stat() is called once all log files have been parsed and only once,
+# and modifies a few values in %stat for a useful display.
 sub fix_stat {
     while (my ($url, $i) = each %stat) {
         # Convert 'mem' values from total to 'per hit' average, more meaningful.
@@ -182,6 +187,8 @@ sub fix_stat {
     }
 }
 
+# raw_report() compute the tabular report which is then rendered via another routine.
+#
 sub raw_report {
     my $sortkey = shift;
 
@@ -214,6 +221,8 @@ sub raw_report {
     return { headers => \@headers, rows => \@rows, sums => \@sums };
 }
 
+# text_report() pretty prints in a terminal raw_report() result
+#
 sub text_report {
     # Compute all reports at first, we'll align all report columns
     my %reports;
@@ -240,7 +249,7 @@ sub text_report {
         my $r = $reports{$key};
 
         # Table separator (starting from 2nd report)
-        print "--\n" if $report_nb++;
+        print "\n" if $report_nb++;
     
         # Table header
         my $h = $r->{headers};
@@ -258,9 +267,13 @@ sub text_report {
     }
 }
 
+# html_report() renders a report from the inlined template in DATA section
+#
 sub hmtl_report {
 }
 
+
+# Main
 
 GetOptions(
     'c|count=i'      => \$count,
@@ -290,8 +303,6 @@ if (not $output =~ /^text|html$/) {
 print_help() if $help;
 print_version() if $version;
 
-POSIX::setlocale(POSIX::LC_NUMERIC, 'C'); # Use . as decimal separator
-
 my @logfiles;
 push(@log, '/var/log/apache2/error*log', '/var/log/apache2/*/error*log') if !@log;
 map { push(@logfiles, glob($_)) } @log;
@@ -312,6 +323,5 @@ if ($bogus >= $hits * .05) {
 }
 
 fix_stat();
-
 text_report() if $output eq 'text';
 html_report() if $output eq 'html';

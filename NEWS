@@ -1,9 +1,8 @@
 phptop 0.5 - Unreleased
 
-    * Gave up 'inc' measure and display; it could be seen as a code complexity
-      measure but has been merely useless in production use for the last months
     * New -o|--output-mode option, refactored reporting internally
-    * Showing sorting column with '>' on text output
+    * Text output: showing sorting column with '>' on text output
+    * Text output: multiple reports are globally column aligned
     * Now checking that -t <value> is numeric
     * Now checking that -s <key> uses a known key
     * Changes -s usage: now using multiple -s instead comma-list
@@ -11,6 +10,8 @@ phptop 0.5 - Unreleased
       operator)
     * Using exactly one print per line (better buffering for large outputs
       or slow links)
+    * Gave up 'inc' measure and display; it could be seen as a code complexity
+      measure but has been merely useless in production use for the last months
 
 phptop 0.4.1 - 2009-11-21
 
