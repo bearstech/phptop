@@ -1,6 +1,7 @@
 phptop 0.5 - Unreleased
 
     * New -o|--output-mode option, refactored reporting internally
+    * New HTML output support
     * Text output: showing sorting column with '>' on text output
     * Text output: multiple reports are globally column aligned
     * Now checking that -t <value> is numeric
