@@ -1,7 +1,10 @@
 phptop 0.5 - Unreleased
 
+    * New -o|--output-mode option, refactored reporting internally
     * Showing sorting column with '>' on text output
     * Now checking that -t <value> is numeric
+    * Now checking that -s <key> uses a known key
+    * Changes -s usage: now using multiple -s instead comma-list
     * Fixed sorting which was not reliable (use proper <=> numeric comparison
       operator)
     * Using exactly one print per line (better buffering for large outputs

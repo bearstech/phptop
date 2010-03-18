@@ -37,9 +37,10 @@ my $version;
 my @log;
 my $full_query;
 my $count = 10;
-my $sortkeys = 'hit';
+my @sortkeys;
 my $span = 10;
 my $path_only;
+my $output = 'text';
 
 # Globals
 my @keys = qw/hit time user sys mem mem_max inc inc_max/;
@@ -47,7 +48,6 @@ my %stat;
 my $now   = time();
 my $hits  = 0;
 my $bogus = 0;
-
 
 sub print_short_help {
     print STDERR <<EOF;
@@ -67,10 +67,13 @@ Options:
   -f, --full-query     Consider full URL with CGI parameters
   -h, --help           Display this information
   -l, --log path       Logfiles to parse, you may use several -l and wildcards
+  -o, --output mode    Output mode: text or html (default is $output);
   -p, --path-only      Only print path, skip http://host
-  -s, --sort key,...   Sort key: hit, time, user, sys, mem or inc (default is $sortkeys)
+  -s, --sort key       Sort key: hit, time, user, sys, mem or inc (default is @sortkeys)
   -t, --time N         Consider log events from now back to N minutes (default is $span)
   -v, --version        Display version number and copyright info
+
+The -s option can be used multiple times to generate several reports in one go.
 
 Columns explanation:
   Hit       Number of queries
@@ -184,11 +187,42 @@ sub fix_stat {
     }
 }
 
-sub text_report {
+sub raw_report {
     my $sortkey = shift;
 
-    my %total;
-    my @tkeys = qw/hit time user sys/;
+    my @headers = map {
+        my $h = $_;
+        $h = "$h/hit" if /^(mem|inc)$/;  # Mem and Inc are per-hit values
+        ucfirst $h;
+    } @keys;
+    unshift(@headers, 'URL');
+
+    my @sumkeys = qw/hit time user sys/;  # We compute totals for these keys
+
+    # Sort queries according to $sortkey (they are all numeric)
+    my @rows;
+    my %sum;
+    foreach my $url (sort { $stat{$b}{$sortkey} <=> $stat{$a}{$sortkey} } keys %stat) {
+        my $s = $stat{$url};
+        $sum{$_} += $s->{$_} foreach @sumkeys;
+
+        # Continue to loop and only sum totals even if $count records have been rendered
+        next if @rows >= $count;
+
+        my @cells = map { sprintf($_ =~ m/hit|inc/ ? '%d' : '%.1f', $s->{$_}) } @keys;
+        push(@rows, [ $url, @cells]);
+    }
+
+    my @sums = map { defined $sum{$_} ? sprintf($_ =~ m/hit|inc/ ? '%d' : '%.1f', $sum{$_}) : '' } @keys;
+    unshift(@sums, "Total (from last $span min)");
+
+    return { headers => \@headers, rows => \@rows, sums => \@sums };
+}
+
+sub text_report {
+    # Compute all reports at first, we'll align all report columns
+    my %reports;
+    $reports{$_} = raw_report($_) foreach @sortkeys;
 
     # Limit URL column width, depending on output available columns
     my $cols  = $ENV{COLUMNS};
@@ -196,48 +230,40 @@ sub text_report {
     my $colmax = $cols - 1 - 9*@keys;
     die "Terminal width to short, try cheating with COLUMNS env var." if $colmax < 16;
 
-    # Sort queries according to $sortkey (they are all numeric)
-    my @sorted = sort { $stat{$b}{$sortkey} <=> $stat{$a}{$sortkey} } keys %stat;
- 
     # Compute URL column width
     my $width = 0;
-    my $n = 0;
-    foreach (@sorted) {
-        last if $n++ >= $count;
-        my $w = length($_);
-        $width = $w if $w > $width;
+    foreach my $r (values %reports) {
+        foreach (@{$r->{rows}}) {
+            my $w = length($_->[0]);
+            $width = $w if $w > $width;
+        }
     }
     $width = $colmax if $width > $colmax;
 
-    # Header
-    my @headers = map {
-        my $h = $_;
-        $h = "$h/hit" if /^(mem|inc)$/;  # Mem and Inc are per-hit values
-        $h = ucfirst $h;
-        $h = ">$h" if $_ eq $sortkey;    # Use '>' to show sorting column
-        sprintf('%8s', $h);
-    } @keys;
-    printf("%-${width}s %s\n", "", join(' ', @headers));
+    my $report_nb = 0;
+    foreach my $key (@sortkeys) {
+        my $r = $reports{$key};
 
-    # Rows
-    $n = 0;
-    foreach my $url (@sorted) {
-        my $s = $stat{$url};
-        $total{$_} += $s->{$_} foreach @tkeys;
-        next if $n++ >= $count; # Continue to loop and only sum totals if $count records have been displayed
- 
-        my $ul = length($url);
-        if ($ul > $width) {
-            $url = substr($url, 0, $width - 3).'...';
+        # Table separator (starting from 2nd report)
+        print "--\n" if $report_nb++;
+    
+        # Table header
+        my $h = $r->{headers};
+        map { $_ = ">$_" if /^$key(\/hit)?$/i } @$h;
+        printf("%-${width}s %s\n", shift(@$h), join(' ', map { sprintf("%8s", $_) } @$h));
+
+        # Rows
+        foreach my $cell (@{$r->{rows}}) {
+            printf("%-${width}s %s\n", shift(@$cell), join(' ', map { sprintf("%8s", $_) } @$cell));
         }
-        my $row = sprintf("%-${width}s", $url);
-        $row   .= sprintf($_ =~ m/hit|inc/ ? ' %8d' : ' %8.1f', $s->{$_}) foreach @keys;
-        print "$row\n";
-    }
 
-    my $footer = sprintf("\n%-${width}s", "Total (from last $span min)");
-    $footer   .= sprintf($_ =~ m/hit/ ? ' %8d' : ' %8.1f', $total{$_}) foreach @tkeys;
-    print "$footer\n";
+        # Sums, totals
+        my $f = $r->{sums};
+        printf("%-${width}s %s\n", shift(@$f), join(' ', map { sprintf("%8s", $_) } @$f));
+    }
+}
+
+sub hmtl_report {
 }
 
 
@@ -246,12 +272,25 @@ GetOptions(
     'f|full-query'   => \$full_query,
     'h|help'         => \$help,
     'l|log=s'        => \@log,
+    'o|output=s'     => \$output,
     'p|path'         => \$path_only,
-    's|sort=s'       => \$sortkeys,
+    's|sort=s'       => \@sortkeys,
     't|time=i'       => \$span,
     'v|version'      => \$version,
 )
 or print_short_help();
+
+@sortkeys = ('hit') if not @sortkeys;
+foreach my $k (@sortkeys) {
+  next if grep { $_ eq $k } @keys;
+  print STDERR "Unknown sort key '$k'.\n";
+  exit 1;
+}
+
+if (not $output =~ /^text|html$/) {
+  print STDERR "Unknown output mode '$output'.\n";
+  exit 1;
+}
 
 print_help() if $help;
 print_version() if $version;
@@ -279,10 +318,5 @@ if ($bogus >= $hits * .05) {
 
 fix_stat();
 
-my @sortkeyl = split(/,/, $sortkeys);
-
-my $reportnb = 0;
-foreach (@sortkeyl) {
-    print "--\n" if $reportnb++;
-    text_report($_);
-}
+text_report() if $output eq 'text';
+html_report() if $output eq 'html';
