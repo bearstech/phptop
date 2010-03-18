@@ -43,7 +43,7 @@ my $path_only;
 my $output = 'text';
 
 # Globals
-my @keys = qw/hit time user sys mem mem_max inc inc_max/;
+my @keys = qw/hit time user sys mem mem_max/;
 my %stat;
 my $now   = time();
 my $hits  = 0;
@@ -69,7 +69,7 @@ Options:
   -l, --log path       Logfiles to parse, you may use several -l and wildcards
   -o, --output mode    Output mode: text or html (default is $output);
   -p, --path-only      Only print path, skip http://host
-  -s, --sort key       Sort key: hit, time, user, sys, mem or inc (default is @sortkeys)
+  -s, --sort key       Sort key: hit, time, user, sys or mem (default is @sortkeys)
   -t, --time N         Consider log events from now back to N minutes (default is $span)
   -v, --version        Display version number and copyright info
 
@@ -82,8 +82,6 @@ Columns explanation:
   Sys       Total system time (in seconds)
   Mem/hit   Average allocated memory per query (MB/hit)
   Mem_max   Maximum allocated memory across queries (MB)
-  Inc/hit   Average included files per query
-  Inc_max   Maximum included files across queries
 EOF
     exit 0;
 }
@@ -161,12 +159,9 @@ no warnings;
 
             $stat{$url}{$key} += $val;
 
-            # Compute max for some values (mem, inc)
+            # Compute max for mem values
             if ($key eq 'mem') {
                 $stat{$url}{'mem_max'} = $val if ($stat{$url}{'mem_max'} || 0) < $val;
-            }
-            elsif ($key eq 'inc') {
-                $stat{$url}{'inc_max'} = $val if ($stat{$url}{'inc_max'} || 0) < $val;
             }
         }
 
@@ -179,11 +174,11 @@ no warnings;
 }
 
 sub fix_stat {
-    # Convert 'mem'  and 'inc' values from total to 'per hit', more useful and meaningful
     while (my ($url, $i) = each %stat) {
-        $i->{'mem_max'} /= 2**20;            # Also scale memory values from bytes to MB
-        $i->{'mem'} /= $i->{'hit'} * 2**20;  # Idem
-        $i->{'inc'} /= $i->{'hit'};
+        # Convert 'mem' values from total to 'per hit' average, more meaningful.
+        # Also scale memory values from bytes to MB.
+        $i->{'mem'} /= $i->{'hit'} * 2**20;
+        $i->{'mem_max'} /= 2**20;
     }
 }
 
@@ -192,7 +187,7 @@ sub raw_report {
 
     my @headers = map {
         my $h = $_;
-        $h = "$h/hit" if /^(mem|inc)$/;  # Mem and Inc are per-hit values
+        $h = "$h/hit" if /^mem$/;  # Mem shows per-hit average values
         ucfirst $h;
     } @keys;
     unshift(@headers, 'URL');
@@ -209,11 +204,11 @@ sub raw_report {
         # Continue to loop and only sum totals even if $count records have been rendered
         next if @rows >= $count;
 
-        my @cells = map { sprintf($_ =~ m/hit|inc/ ? '%d' : '%.1f', $s->{$_}) } @keys;
+        my @cells = map { sprintf($_ =~ m/hit/ ? '%d' : '%.1f', $s->{$_}) } @keys;
         push(@rows, [ $url, @cells]);
     }
 
-    my @sums = map { defined $sum{$_} ? sprintf($_ =~ m/hit|inc/ ? '%d' : '%.1f', $sum{$_}) : '' } @keys;
+    my @sums = map { defined $sum{$_} ? sprintf($_ =~ m/hit/ ? '%d' : '%.1f', $sum{$_}) : '' } @keys;
     unshift(@sums, "Total (from last $span min)");
 
     return { headers => \@headers, rows => \@rows, sums => \@sums };

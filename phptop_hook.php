@@ -43,14 +43,12 @@ function _phptop_fini() {
 
   $mem   = memory_get_peak_usage(TRUE);
 
-  $inc   = count(get_included_files());
-
   $proto = isset($_SERVER['HTTPS']) ? 'https' : 'http';
   $vhost = $_SERVER['SERVER_NAME'];
   $uri   = $_SERVER['REQUEST_URI'];
   $self  = $vhost != '' ? "$proto://$vhost$uri" : $_SERVER['SCRIPT_FILENAME'];
 
-  $msg = sprintf("phptop %s time:%.6F user:%.6F sys:%.6F mem:%g inc:%g", $self, $time, $tusr, $tsys, $mem, $inc);
+  $msg = sprintf("phptop %s time:%.6F user:%.6F sys:%.6F mem:%g", $self, $time, $tusr, $tsys, $mem);
   error_log($msg);
 }
 

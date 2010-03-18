@@ -1,5 +1,7 @@
 phptop 0.5 - Unreleased
 
+    * Gave up 'inc' measure and display; it could be seen as a code complexity
+      measure but has been merely useless in production use for the last months
     * New -o|--output-mode option, refactored reporting internally
     * Showing sorting column with '>' on text output
     * Now checking that -t <value> is numeric
