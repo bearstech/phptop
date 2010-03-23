@@ -1,3 +1,7 @@
+phptop 0.5.2 - UNRELEASED
+
+    * New man page, lots of details.
+
 phptop 0.5.1 - 2010-03-23
 
     * Added NEWS to debian/docs, Debian people could only see a rather

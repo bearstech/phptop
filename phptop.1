@@ -1,0 +1,105 @@
+.\" Yes, this file is manually edited.
+.\"
+.TH "PHPTOP" "1" "03/23/2010" "\  0.5.1" "\ "
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+phptop \- print system ressource usage statistics from PHP scripts
+.SH "SYNOPSIS"
+phptop [options]
+.sp
+.SH "DESCRIPTION"
+Phptop prints per query and average metrics comparable to the 'time' program or shell builtin: wallclock, user and system CPU time along with memory and other ressource usages.
+.sp
+It can be used from the command line to diagnose performance problem in quasi real time (minimum sampling is 1 minute) with minimal overhead, or to generate HTML reports.
+.sp
+It uses a a few lines of PHP which hook into your existing code without any changes, records per query statistics via the standard error log, then collects and prints reports with a standalone program. Phptop itself is written in Perl 5.
+.sp
+.SH "OPTIONS"
+.TP
+\-c, \-\-count N
+Limit output to top N URLs (default is 10).
+.TP
+\-f, \-\-full\-query
+Consider full URL with CGI parameters (ie. do not strip ?param=...).
+.TP
+\-h, \-\-help
+Display a short options summary.
+.TP
+\-l, \-\-log path
+Logfiles to parse, you may use several \-l options and wildcards in paths. Be careful to quote your wildcards in order they are not interpreted by your shell. If no \-l options are used, try a few guesses.
+.tp
+\-o, \-\-output mode
+Output mode: text or html (default is 'text').
+.TP
+\-p, \-\-path\-only
+Only print URL paths, skip the  http://<host> prefix.
+.TP
+\-s, \-\-sort key
+Sort by hit, time, user, sys or mem (default is 'hit'). You may use several \-s options, they will generate as much statistics in one go (hence reusing the parsing effort efficiently).
+.TP
+\-t, \-\-time N
+Parse data from now back to N minutes (default is 10).
+.TP
+\-v, \-\-version
+Display version number and copyright information.
+.SH "EXAMPLES"
+Using phptop to print the top CPU (user) consumers for the last 10min:
+.sp
+.sp
+.nf
+phptop -l /path/to/error.log -t 10
+.fi
+Hint: on a given server, define a shell alias which already sets the proper error log paths. This way you don't have to repeat them again. Bash recipe:
+.sp
+.sp
+.nf
+$ echo "alias phptop='phptop -l /home/*/log/error.log'" >>.bashrc
+$ source .bashrc
+$ phptop -t1
+.fi
+.SH "INTERPRETATION"
+FIXME
+.sp
+.SH "DISCUSSION"
+Phptop hooks into existing code via the \fBauto_prepend_file\fP PHP option. This option might be set and overriden at different levels by other programs (global, per-directory, per-vhost, etc). Since phptop has been verified to have no measurable impact on heavy production servers, it is considered to be a good idea to enable it globally. If your server uses several log files (typiclaly one per virtual host), you will be able to only pickup needed data at analysis time (which is the potentially costly phase).
+.sp
+Phptop records data via the \fBerror_log()\fP PHP instruction. The author considers that any sane server setup should have a working error log, and it would have been inefficient and dangerous to handle custom logging (which would obviously end up firing lots of open/write/close, not being properly rotatated and so on). It might annoy your monitoring tools, but again if you're serious about monitoring you know how to filter out noise. Loggine one (small) text line per request is considered an infinitesimal amount of effort wrt. to the simplest SQL query. A phptop sample is smaller than some user agent string you find in your web server access logs.
+.sp
+At analysis time (when launching phptop itself), care has been taken to read and parse only the needed amount of data. Most importantly it will use the tac(1) command to 'reverse tail' the error logs, and default to a slower method if this command is not found.
+.sp
+The analysis process itself is mostly CPU bound if your error log sits on a reasonably available storage, and runs at approx. 15,000 samples/sec on a 2.4Ghz Intel core. That is why phptop output should be almost instantaneous while analysing the last minutes (eg. -t5), even on a very busy server (100 req/sec or more).
+.sp
+.SH "BUGS"
+Phptop has been extensively used on production servers, but only on GNU/Linux Debian Etch (4.0), Lenny (5.0) and specifically on the AMD64 architecture with PHP 5.2. Tests and reports with other kernels, distributions and PHP versions are warmly welcome.
+.sp
+Please file bugs on http://forge.bearstech.com/trac/newticket (simple registration needed), we try to solve them quickly and release often.
+.sp
+.SH "ENVIRONMENT VARIABLES"
+.sp
+.TP
+COLUMNS
+If set and stdout is a tty, overrides the detected terminal width. If there is no terminal (like when piping to another program), set output width.
+.sp
+.SH "FILES"
+.sp
+.nf
+/usr/share/phptop/phptop_hook.php
+.fi
+.SH "AUTHOR"
+Written by Vincent Caron
+.sp
+Homepage at \fIhttp://forge.bearstech.com/trac/wiki/PhpTop\fR
+.sp
+.SH "COPYRIGHT"
+.sp
+Copyright © 2009,2010 Bearstech. License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+.sp
+.SH "SEE ALSO"
+.sp
+.nf
+time(1), getrusage(2)
+.fi
