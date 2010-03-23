@@ -6,6 +6,8 @@ user and system CPU time) along with memory and other ressource usages.
 It can be easily globally activated on a LAMP server and requires little
 ressources and a single line configuration change in your php.ini.
 
+Requires PHP >= 4.3.10 or PHP >= 5.0.3.
+
 Homepage, more documentation and updates:
 
   http://forge.bearstech.com/trac/wiki/PhpTop
@@ -31,3 +33,7 @@ Example usage:
   http://test.org/page/welcome                5      0.7      0.2      0.1      5.0     25.0
   Total (from last 10 min)                 1140     95.9     27.0      3.7
 
+
+Thanks for your participation:
+
+ * Marc Dequènes aka Duck

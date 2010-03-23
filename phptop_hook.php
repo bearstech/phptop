@@ -48,7 +48,7 @@ function _phptop_fini() {
   $uri   = $_SERVER['REQUEST_URI'];
   $self  = $vhost != '' ? "$proto://$vhost$uri" : $_SERVER['SCRIPT_FILENAME'];
 
-  $msg = sprintf("phptop %s time:%.6F user:%.6F sys:%.6F mem:%g", $self, $time, $tusr, $tsys, $mem);
+  $msg = sprintf("phptop %s time:%.6F user:%.6F sys:%.6F mem:%d", $self, $time, $tusr, $tsys, $mem);
   error_log($msg);
 }
 
