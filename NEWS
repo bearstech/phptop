@@ -1,3 +1,11 @@
+phptop 0.5.1 - 2010-03-23
+
+    * Added NEWS to debian/docs, Debian people could only see a rather
+      boring 'upstream update' short message (Duck, bug #7).
+    * Fixed memory output as a %g float and using sometimes scientific
+      notation which would then discard the whole sample once parsed
+      (Duck, bug #8).
+
 phptop 0.5 - 2010-03-19
 
     * New -o|--output-mode option, refactored reporting internally

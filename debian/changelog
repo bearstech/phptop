@@ -1,6 +1,7 @@
-phptop (0.5.1) UNRELEASED; urgency=low
+phptop (0.5.1) stable; urgency=low
 
   * Added NEWS to docs/ (closes #7)
+  * Upstream update
 
  -- Vincent CARON <vcaron@bearstech.com>  Tue, 23 Mar 2010 19:45:25 +0100
 
