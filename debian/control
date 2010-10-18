@@ -2,7 +2,7 @@ Source: phptop
 Section: admin
 Priority: optional
 Maintainer: Vincent Caron <vcaron@bearstech.com>
-Build-Depends: debhelper
+Build-Depends: debhelper (>= 0.7.15)
 Homepage: http://forge.bearstech.com/trac/wiki/PhpTop
 
 Package: phptop

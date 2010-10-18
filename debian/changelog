@@ -1,3 +1,19 @@
+phptop (0.5.2-1) stable; urgency=low
+
+  * Added -I'*.log' to dpkg-buildpackage to skip sample log files while
+  generating (bulky) orig.tar.gz
+
+  * lintian fixes:
+    - added -i to dpkg-buildpackage to skip VCS files
+    - added debian/copyright, quoting GPL-3 common license
+    - fixed man page syntax error
+    - added dummy binary-arch target in debian/rules
+    - created debian/source/format '3.0 (native)'
+    - explicit minimum version for debhelper
+    - s/dh_clean -k/dh_prep/
+
+ -- Vincent CARON <vcaron@bearstech.com>  Tue, 19 Oct 2010 01:41:36 +0200
+
 phptop (0.5.2) stable; urgency=low
 
   * Upstream update, see NEWS file 

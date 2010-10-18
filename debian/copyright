@@ -1,0 +1,10 @@
+Copyright 2009,2010 Bearstech <contact@bearstech.com>
+
+Author: Vincent Caron <vcaron@bearstech.com>
+Home  : http://forge.bearstech.com/trac/wiki/PhpTop
+
+This is a native Debian package, the author is also the Debian maintainer.
+
+Source, documentation and sample data files are all licensed under the
+GNU GPL version 3 or later. See /usr/share/common-licenses/GPL-3 for the
+license details.

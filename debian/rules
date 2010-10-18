@@ -14,7 +14,7 @@ clean:
 install: build
 				dh_testdir
 				dh_testroot
-				dh_clean -k 
+				dh_prep
 				dh_installdirs
 
 				install -o root -g root -m 444 $(CURDIR)/phptop_hook.php $(CURDIR)/debian/phptop/usr/share/phptop/phptop_hook.php
@@ -35,5 +35,7 @@ binary: build install
 				dh_gencontrol
 				dh_md5sums
 				dh_builddeb
+
+binary-arch:
 
 .PHONY: build clean binary install configure
