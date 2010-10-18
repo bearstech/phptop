@@ -9,10 +9,10 @@ release:
 	  rm -rf $$release )
 
 deb:
-	@echo "Don't forget to edit debian/changelog..."
+	@echo "Don't forget to edit debian/changelog (dch -v <version>)..."
 	@sleep 2
 	@echo "Building the package..."
-	dpkg-buildpackage -rfakeroot -uc -us
+	dpkg-buildpackage -rfakeroot -I'*.log'
 
 debclean:
 	fakeroot debian/rules clean

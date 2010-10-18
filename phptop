@@ -25,7 +25,7 @@ use Term::Size;
 use Sys::Hostname;
 
 my $package_name    = 'phptop';
-my $package_version = '0.5.2-dev';
+my $package_version = '0.5.2';
 my $package_owner   = 'Copyright (C) 2009,2010 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
