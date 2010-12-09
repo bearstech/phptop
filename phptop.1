@@ -11,11 +11,11 @@ phptop \- print system ressource usage statistics from PHP scripts
 phptop [options]
 .sp
 .SH "DESCRIPTION"
-Phptop prints per query and average metrics comparable to the 'time' program or shell builtin: wallclock, user and system CPU time along with memory and other ressource usages.
+Phptop prints per query and average metrics comparable to the 'time' program or shell builtin: wallclock, user and system CPU time along with memory and other ressources usage.
 .sp
 It can be used from the command line to diagnose performance problem in quasi real time (minimum sampling is 1 minute) with minimal overhead, or to generate HTML reports.
 .sp
-It uses a a few lines of PHP which hook into your existing code without any changes, records per query statistics via the standard error log, then collects and prints reports with a standalone program. Phptop itself is written in Perl 5.
+It uses a a few lines of PHP which hook into your existing code without any changes, records per query statistics via the standard error log, then collects and prints reports with a standalone program. Phptop itself is written in Perl.
 .sp
 .SH "OPTIONS"
 .TP
@@ -64,9 +64,9 @@ $ phptop -t1
 FIXME
 .sp
 .SH "DISCUSSION"
-Phptop hooks into existing code via the \fBauto_prepend_file\fP PHP option. This option might be set and overriden at different levels by other programs (global, per-directory, per-vhost, etc). Since phptop has been verified to have no measurable impact on heavy production servers, it is considered to be a good idea to enable it globally. If your server uses several log files (typiclaly one per virtual host), you will be able to only pickup needed data at analysis time (which is the potentially costly phase).
+Phptop hooks into existing code via the \fBauto_prepend_file\fP PHP option. This option might be set and overriden at different levels by other programs (global, per-directory, per-vhost, etc). Since phptop has been verified to have no measurable impact on heavy production servers, it is considered to be a good idea to enable it globally. If your server uses several log files (typically one per virtual host), you will be able to only pickup needed data at analysis time (which is the potentially costly phase).
 .sp
-Phptop records data via the \fBerror_log()\fP PHP instruction. The author considers that any sane server setup should have a working error log, and it would have been inefficient and dangerous to handle custom logging (which would obviously end up firing lots of open/write/close, not being properly rotatated and so on). It might annoy your monitoring tools, but again if you're serious about monitoring you know how to filter out noise. Loggine one (small) text line per request is considered an infinitesimal amount of effort wrt. to the simplest SQL query. A phptop sample is smaller than some user agent string you find in your web server access logs.
+Phptop records data via the \fBerror_log()\fP PHP instruction. The author considers that any sane server setup should have a working error log, and it would have been inefficient and dangerous to handle custom logging (which would obviously end up firing lots of open/write/close, not being properly rotated and so on). It might annoy your monitoring tools, but again if you're serious about monitoring you know how to filter out noise. Logging one (small) text line per request is considered an infinitesimal amount of effort wrt. to the simplest SQL query. A phptop sample is smaller than some user agent string you find in your web server access logs.
 .sp
 At analysis time (when launching phptop itself), care has been taken to read and parse only the needed amount of data. Most importantly it will use the tac(1) command to 'reverse tail' the error logs, and default to a slower method if this command is not found.
 .sp
