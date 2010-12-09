@@ -37,5 +37,6 @@ binary: build install
 				dh_builddeb
 
 binary-arch:
+binary-indep:
 
 .PHONY: build clean binary install configure

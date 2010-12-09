@@ -1,3 +1,14 @@
+phptop (0.5.2+nmu2) stable; urgency=low
+
+  * NMU
+
+  * lintian fixes:
+    - dpkg-source: added -I.svn which was purged by explicit -I'*.log'
+    - using native package NMU style versionning
+    - added dummy binary-indep target in debian/rules
+
+ -- Vincent CARON <vcaron@bearstech.com>  Tue, 19 Oct 2010 02:03:29 +0200
+
 phptop (0.5.2-1) stable; urgency=low
 
   * Added -I'*.log' to dpkg-buildpackage to skip sample log files while

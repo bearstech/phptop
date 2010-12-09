@@ -11,7 +11,7 @@ release:
 deb:
 	@echo "Don't forget to edit debian/changelog (dch -v <version>)..."
 	@echo "Building the package..."
-	dpkg-buildpackage -rfakeroot -i -I'*.log'
+	dpkg-buildpackage -rfakeroot -i -I.svn -I'*.log'
 
 debclean:
 	fakeroot debian/rules clean
