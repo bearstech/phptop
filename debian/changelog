@@ -1,3 +1,9 @@
+phptop (0.5.3-1) stable; urgency=low
+
+  * Upstream update, see NEWS file 
+
+ -- Vincent CARON <vcaron@bearstech.com>  Mon, 14 Mar 2011 21:29:25 +0100
+
 phptop (0.5.2+nmu2) stable; urgency=low
 
   * NMU

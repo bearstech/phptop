@@ -1,4 +1,4 @@
-phptop (c) 2009,2010 Bearstech - http://bearstech.com/
+phptop (c) 2009,2010,2011 Bearstech - http://bearstech.com/
 
 phptop prints per query and average metrics comparable to 'time' (wallclock,
 user and system CPU time) along with memory and other ressource usages.
@@ -19,7 +19,7 @@ Example usage:
 
   (Wait at least a few minutes to collect data...)
 
-  server:~# ./phptop -s mem
+  server:~# phptop -s mem
   URL                                       Hit     Time     User      Sys >Mem/hit  Mem_max
   http://blog.dummy.com/facebook/myapi/       5      0.8      0.5      0.1      6.2     31.0
   http://blog.dummy.com/feed                 10      1.0      0.8      0.1      6.0     30.2
@@ -37,3 +37,4 @@ Example usage:
 Thanks for your participation:
 
  * Marc Dequènes aka Duck
+

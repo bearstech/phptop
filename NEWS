@@ -1,3 +1,12 @@
+phptop 0.5.3 - 2011-03-14
+
+    * Non-compatible change: -t is now using seconds, because it didn't make
+      any sense to use minutes there and seconds here.
+    * Minor bugfix, PHP comments use ; and not # now
+    * Style fix: 'perlcritic phptop' OK
+    * Added 2011 in various (c) notices
+    * man page: finally writen the INTERPRETATION section
+
 phptop 0.5.2 - 2010-10-19
 
     * New man page, lots of details.
