@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+# 2011-03-14 vcaron@bearstech.com
+#
+# Usage: man2trac <phptop.1 >phptop1.txt
+
+my $col = 0;
+
+while (<>) {
+    chomp;
+
+    if (/^\.TH "(.*?)" "(.*?)"/) {
+        print "= $1 ($2) =\n";
+        next;
+    }
+    if (/^\.SH "(.*?)"/) {
+        print "\n== $1 ==\n";
+        next;
+    }
+    if (/^\.TP/) {
+        $col = 2;
+        next;
+    }
+    if (/^\.nf/) {
+        print "{{{\n";
+        next;
+    }
+    if (/^\.fi/) {
+        print "}}}\n";
+        next;
+    }
+    if (/^\.sp/) {
+        print "\n";
+        next;
+    }
+    next if /^\./;
+
+    s/\\-/-/g;
+    s/\\fB(.*?)\\fP/{{{$1}}}/g;
+    s/\\fI(.*?)\\fR/$1/g;
+
+    print "''$_''\n" if $col == 2;
+    print "  $_\n" if $col == 1;
+    print "$_\n" if $col == 0;
+
+    $col-- if $col > 0;
+}
