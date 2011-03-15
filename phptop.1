@@ -11,11 +11,11 @@ phptop \- print system ressource usage statistics from PHP scripts
 phptop [options]
 .sp
 .SH "DESCRIPTION"
-Phptop prints per query and average metrics comparable to the 'time' program or shell builtin: wallclock, user and system CPU time along with memory and other ressources usage.
+phptop prints per query and average metrics comparable to the 'time' program or shell builtin: wallclock, user and system CPU time along with memory and other ressources usage. It can be used from the command line to diagnose performance problem in quasi real time (minimum sampling is 1 minute) with minimal overhead, or to generate HTML reports.
 .sp
-It can be used from the command line to diagnose performance problem in quasi real time (minimum sampling is 1 minute) with minimal overhead, or to generate HTML reports.
+Performance data is measured by a simple PHP hook (\fBphptop_hook.php\fP) which is automatically run on every PHP script execution via the \fBauto_prepend\fP PHP option. These data are collected in your web server error log, provided you have setup PHP to log errors (\fPlog_errors = On\fP) and not display them in your regular output (\fBdisplay_errors = Off\fP) - which should be the case of any sane production server.
 .sp
-It uses a a few lines of PHP which hook into your existing code without any changes, records per query statistics via the standard error log, then collects and prints reports with a standalone program. Phptop itself is written in Perl.
+The phptop command will then parse those error logs and output useful statistics (see INTERPRETATION below).
 .sp
 .SH "OPTIONS"
 .TP
@@ -59,6 +59,7 @@ Getting stats from the last 10 minutes, sorted by hits, from well known log file
 .nf
 phptop -p
 .fi
+.sp
 Hint: on a given server, define a shell alias which already sets the proper error log paths. This way you don't have to repeat them again. Bash recipe:
 .sp
 .sp
@@ -68,25 +69,25 @@ $ source .bashrc
 $ phptop -t60
 .fi
 .SH "INTERPRETATION"
-Wallclock, system and user times are cumulated for similar URLs, and the total per URL is shown. It is an absolute time value which must be related to your observation window (-t option). The wallclock time is not a very interesting measure, since it depends both on your server ressources, on the client and on the client-server bandwidth, minus buffering effects. Interpret it with much caution.
+Wallclock, system and user times are cumulated for similar URLs, and the total per URL is shown. It is an absolute time value which must be related to your observation window (-t option). The wallclock time is not a very interesting measure, since it depends on your server ressources, on the client and on the client-server bandwidth, minus buffering effects. Interpret it with much caution.
 .sp
-The user and system time are CPU ressources. For a one minute observation window (-t 60), on a quad-core system you have 4 minutes (240 seconds) worth of CPU time to be split between user (CPU running application code), system (CPU running kernel code) and idle (CPU waiting I/O or doing nothing). On a busy and healthy server, user and system time add up to the whole available CPU time. If your user and system total time is far from the available CPU time, consult your server loadavg: if it's high (more than your number of CPUs), your server is probably waiting on I/O (more often disk than network); if it's low, your application might be waiting on remote services (think remote HTTP APIs) which are slow or not responding.
+The user and system time are CPU ressources. For a one minute observation window (-t 60), on a quad-core system you have 4 minutes (240 seconds) worth of CPU time to be split between user (CPU running application code), system (CPU running kernel code) and idle (CPU waiting I/O or doing nothing). On a busy and healthy server, user and system time add up to the whole available CPU time. If your user and system total time is low and far from the available CPU time, consult your server loadavg: if it's high (more than your number of CPUs), your server is probably waiting on I/O (more often disk than network); if it's low, your application might be waiting on remote services (think remote HTTP APIs) which are slow or not responding.
 .sp
-The memory figures can't be added, it would not make any sense. Instead simple satistics like maximum and average memory per URL are computed. The peak memory usage is very interesting when running phptop over a large time window (one day or more) to figure out your optimal PHP memory_limit figure, which is itself very useful for proper configuration and usage of system ressources (number of PHP processes, SQL server connections, and so on). Over a short time window it also acts as a poor man's profiler, and can spot.
+The memory figures can't be added, it would not make any sense. Instead simple satistics like peak (maximum) and average memory per URL are computed. The peak memory usage is very interesting when running phptop over a large time window (one day or more) to figure out your optimal PHP \fBmemory_limit\fP figure, which is itself very useful for proper configuration and usage of system ressources (number of PHP processes, SQL server connections, and so on). Over a short time window it also acts as a poor man's profiler, and can spot.
 .sp
 .SH "DISCUSSION"
-Phptop hooks into existing code via the \fBauto_prepend_file\fP PHP option. This option might be set and overriden at different levels by other programs (global, per-directory, per-vhost, etc). Since phptop has been verified to have no measurable impact on heavy production servers, it is considered to be a good idea to enable it globally. If your server uses several log files (typically one per virtual host), you will be able to only pickup needed data at analysis time (which is the potentially costly phase).
+phptop hooks into existing code via the \fBauto_prepend_file\fP PHP option. This option might be set and overriden at different levels by other programs (global, per-directory, per-vhost, etc). Since phptop has been verified to have no measurable impact on heavy production servers, it is considered to be a good idea to enable it globally. If your server uses several log files (typically one per virtual host), you will be able to only pickup needed data at analysis time (which is the potentially costly phase).
 .sp
-Phptop records data via the \fBerror_log()\fP PHP instruction. The author considers that any sane server setup should have a working error log, and it would have been inefficient and dangerous to handle custom logging (which would obviously end up firing lots of open/write/close, not being properly rotated and so on). It might annoy your monitoring tools, but again if you're serious about monitoring you know how to filter out noise. Logging one (small) text line per request is considered an infinitesimal amount of effort wrt. to the simplest SQL query. A phptop sample is smaller than some user agent string you find in your web server access logs.
+phptop records data via the \fBerror_log()\fP PHP instruction. The author considers that any sane server setup should have a working error log, and it would have been inefficient and dangerous to handle custom logging (which would obviously end up firing lots of open/write/close, not being properly rotated and so on). This method is efficient and safe, but it has some drawbacks, see BUGS below.
 .sp
-At analysis time (when launching phptop itself), care has been taken to read and parse only the needed amount of data. Most importantly it will use the tac(1) command to 'reverse tail' the error logs, and default to a slower method if this command is not found.
+At analysis time (when launching phptop itself), care has been taken to read and parse only the needed amount of data. Most importantly it will use the tac(1) command to 'reverse tail' the error logs, and default to a slower method if this command is not found. phptop can parse plain and gzipped log files.
 .sp
 The analysis process itself is mostly CPU bound if your error log sits on a reasonably available storage, and runs at approx. 15,000 samples/sec on a 2.4Ghz Intel core. That is why phptop output should be almost instantaneous while analysing the last minutes (eg. -t 300), even on a very busy server (100 req/sec or more).
 .sp
 .SH "BUGS"
-Phtop should run '-s user' as a default instead of the useless-but-look-ma-my-hits '-s hit'.
+phptop should run '-s user' as a default instead of the useless-but-look-ma-my-hits '-s hit'.
 .sp
-Phptop has been extensively used on production servers, but only on GNU/Linux Debian Etch (4.0), Lenny (5.0) and specifically on the AMD64 architecture with PHP 5.2. Tests and reports with other kernels, distributions and PHP versions are warmly welcome.
+phptop pollutes error logs with non-error information, but this makes phptop fast and safe (see DISCUSSION). As a side effect, phptop won't collect data for scripts run throught the CLI SAPI (it pollutes their stderr), which is a shame.
 .sp
 Please file bugs on http://forge.bearstech.com/trac/newticket (simple registration needed), we try to solve them quickly and release often.
 .sp

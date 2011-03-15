@@ -1,3 +1,8 @@
+phptop 0.5.4 - NOT YET
+
+    * Improved man page, mentionned error log problems and CLI not being
+      monitored
+
 phptop 0.5.3 - 2011-03-14
 
     * Non-compatible change: -t is now using seconds, because it didn't make

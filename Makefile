@@ -18,7 +18,7 @@ debclean:
 	rm build
 
 debupload:
-	rsync -z ../phptop_*.deb builder@deb.bearstech.com:~/www/squeeze
+	rsync -z ../phptop_*.deb builder@deb.bearstech.com:~/src/phptop
 	ssh builder@deb.bearstech.com make -C www/squeeze phptop
 
 deploy:
