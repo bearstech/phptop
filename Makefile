@@ -8,6 +8,10 @@ release:
 	  tar czf $$release.tar.gz $$release; \
 	  rm -rf $$release )
 
+# Bearstech target
+build:
+	dpkg-buildpackage -rfakeroot -i -I.svn -I'*.log' -uc -us
+
 deb:
 	@echo "Don't forget to edit debian/changelog (dch -v <version>)..."
 	@echo "Building the package..."
