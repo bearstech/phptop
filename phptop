@@ -40,6 +40,7 @@ my @sortkeys;
 my $count  = 10;
 my $span   = 300;
 my $output = 'text';
+my $relative;
 
 # Globals
 my @keys = qw/hit time user sys mem mem_max/;
@@ -69,6 +70,7 @@ Options:
   -l, --log path       Logfiles to parse, you may use several -l and wildcards
   -o, --output mode    Output mode: text or html (default is $output);
   -p, --path-only      Only print path, skip http://host
+  -r, --relative       Print time as relative percentage (wrt. -t span)
   -s, --sort key       Sort key: hit, time, user, sys or mem (default is @sortkeys)
   -t, --time N         Parse data from now back to N seconds (default is $span)
   -v, --version        Display version number and copyright info
@@ -190,6 +192,20 @@ sub fix_stat {
     }
 }
 
+# raw_cell() is used by raw_report to render a value for a specific key,
+# depending on some options and context (defined value or not, relative or
+# absolute, etc.)
+#
+sub raw_cell {
+    my ($key, $val) = @_;
+
+    return '' if not defined $val;                # No value -> blank display
+    return sprintf('%d', $val) if $key =~ /hit/;  # Hit counts -> plain integer values
+    return sprintf('%.1f%%', $val / $span * 100)  # Relative value for time columns
+        if $key =~ /time|user|sys/ and defined $relative;
+    return sprintf('%.1f', $val)                  # Otherwise, absolute value in seconds
+}
+
 # raw_report() compute the tabular report which is then rendered via another routine.
 #
 sub raw_report {
@@ -214,12 +230,11 @@ sub raw_report {
         # Continue to loop and only sum totals even if $count records have been rendered
         next if @rows >= $count;
 
-        my @cells = map { sprintf($_ =~ m/hit/ ? '%d' : '%.1f', $s->{$_}) } @keys;
+        my @cells = map { raw_cell($_, $s->{$_}) } @keys;
         push(@rows, [ $url, @cells]);
     }
 
-    my @sums = map { defined $sum{$_} ? sprintf($_ =~ m/hit/ ? '%d' : '%.1f', $sum{$_}) : '' } @keys;
-    unshift(@sums, "Total (from last $span sec)");
+    my @sums = ("Total (from last $span sec)", map { raw_cell($_, $sum{$_}) } @keys);
 
     return { headers => \@headers, rows => \@rows, sums => \@sums };
 }
@@ -331,6 +346,7 @@ GetOptions(
     'l|log=s'        => \@log,
     'o|output=s'     => \$output,
     'p|path'         => \$path_only,
+    'r|relative'     => \$relative,
     's|sort=s'       => \@sortkeys,
     't|time=i'       => \$span,
     'v|version'      => \$version,
