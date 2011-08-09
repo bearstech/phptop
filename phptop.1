@@ -19,6 +19,9 @@ The phptop command will then parse those error logs and output useful statistics
 .sp
 .SH "OPTIONS"
 .TP
+\-a, \-\-average
+Show per-hit average values instead of cumulated time.
+.TP
 \-c, \-\-count N
 Limit output to top N URLs (default is 10).
 .TP
@@ -38,7 +41,7 @@ Output mode: text or html (default is 'text').
 Only print URL paths, skip the  http://<host> prefix.
 .TP
 \-r, \-\-relative
-Show time values relative to the sample period (see -t). For instance, a cumulated 30sec user time for a 300sec sample will be shown as '10%'.
+Show time values relative to the sample period (see -t). For instance, a cumulated 30sec user time for a 300sec sample will be shown as '10%'. Hits are also printed relative to the total of parsed records.
 .TP
 \-s, \-\-sort key
 Sort by hit, time, user, sys or mem (default is 'hit'). You may use several \-s options, they will generate as much statistics in one go (hence reusing the parsing effort efficiently).

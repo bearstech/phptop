@@ -65,7 +65,7 @@ sub print_help {
 Usage: $package_name [options]
 
 Options:
-  -a, --average        Show per-hit average values instead of sum
+  -a, --average        Show per-hit average values instead of cumulated time
   -c, --count N        Limit output to top N URLs (default is $count)
   -f, --full-query     Consider full URL with CGI parameters
   -h, --help           Display this information
@@ -199,9 +199,17 @@ sub fix_stat {
 # absolute, etc.)
 #
 sub raw_cell {
-    my ($key, $val) = @_;
+    my ($key, $s) = @_;
 
-    return '' if not defined $val;                # No value -> blank display
+    my $val = $s->{$key};
+    return '' if not defined $val; # No value -> blank display
+
+    my $timespec = '%.1f';
+    my $url_hits = $s->{hit};
+    if (defined $average and defined $url_hits) {
+        $val /= $url_hits if $key =~ /time|user|sys/;
+        $timespec = '%.3f';  # Per hit time values are rather in milliseconds
+    }
 
     if (defined $relative) {
         # Relative value for time columns
@@ -212,7 +220,7 @@ sub raw_cell {
     }
 
     return sprintf('%d', $val) if $key =~ /hit/;  # Hit counts -> plain integer values
-    return sprintf('%.1f', $val)                  # Otherwise, absolute value in seconds
+    return sprintf($timespec, $val)               # Otherwise, absolute value in seconds
 }
 
 # raw_report() compute the tabular report which is then rendered via another routine.
@@ -233,12 +241,12 @@ sub raw_report {
     while (my ($url, $s) = each %stat) {
        $sum{$_} += $s->{$_} foreach @sumkeys;
     }
-    my @sums = ("Total (from last $span sec)", map { raw_cell($_, $sum{$_}) } @keys);
+    my @sums = ("Total (from last $span sec)", map { raw_cell($_, { $_ => $sum{$_}, hit => $hits }) } @keys);
 
     # Sort queries according to $sortkey (they are all numeric)
     my @rows;
     foreach my $url (sort { $stat{$b}{$sortkey} <=> $stat{$a}{$sortkey} } keys %stat) {
-        my @cells = map { raw_cell($_, $stat{$url}{$_}) } @keys;
+        my @cells = map { raw_cell($_, $stat{$url}) } @keys;
         push(@rows, [ $url, @cells]);
         last if @rows >= $count;
     }
@@ -347,6 +355,7 @@ sub html_report_row {
 # Main
 
 GetOptions(
+    'a|average'      => \$average,
     'c|count=i'      => \$count,
     'f|full-query'   => \$full_query,
     'h|help'         => \$help,

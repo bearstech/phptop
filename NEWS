@@ -3,6 +3,7 @@ phptop 0.5.4 - NOT YET
     * Improved man page, mentionned error log problems and CLI not being
       monitored
     * Added -r|--relative option
+    * Added -a|--average option
 
 phptop 0.5.3 - 2011-03-14
 
