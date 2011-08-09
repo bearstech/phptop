@@ -41,6 +41,7 @@ my $count  = 10;
 my $span   = 300;
 my $output = 'text';
 my $relative;
+my $average;
 
 # Globals
 my @keys = qw/hit time user sys mem mem_max/;
@@ -64,13 +65,14 @@ sub print_help {
 Usage: $package_name [options]
 
 Options:
+  -a, --average        Show per-hit average values instead of sum
   -c, --count N        Limit output to top N URLs (default is $count)
   -f, --full-query     Consider full URL with CGI parameters
   -h, --help           Display this information
   -l, --log path       Logfiles to parse, you may use several -l and wildcards
   -o, --output mode    Output mode: text or html (default is $output);
   -p, --path-only      Only print path, skip http://host
-  -r, --relative       Print time as relative percentage (wrt. -t span)
+  -r, --relative       Print relative hit and time values (in percent)
   -s, --sort key       Sort key: hit, time, user, sys or mem (default is @sortkeys)
   -t, --time N         Parse data from now back to N seconds (default is $span)
   -v, --version        Display version number and copyright info
@@ -200,9 +202,16 @@ sub raw_cell {
     my ($key, $val) = @_;
 
     return '' if not defined $val;                # No value -> blank display
+
+    if (defined $relative) {
+        # Relative value for time columns
+        return sprintf('%.1f%%', $val / $span * 100) if $key =~ /time|user|sys/;
+
+        # Relative value for hits
+        return sprintf('%.1f%%', $val / $hits * 100) if $key eq 'hit';
+    }
+
     return sprintf('%d', $val) if $key =~ /hit/;  # Hit counts -> plain integer values
-    return sprintf('%.1f%%', $val / $span * 100)  # Relative value for time columns
-        if $key =~ /time|user|sys/ and defined $relative;
     return sprintf('%.1f', $val)                  # Otherwise, absolute value in seconds
 }
 
@@ -218,23 +227,21 @@ sub raw_report {
     } @keys;
     unshift(@headers, 'URL');
 
-    my @sumkeys = qw/hit time user sys/;  # We compute totals for these keys
+    # We compute grand totals for these keys
+    my @sumkeys = qw/hit time user sys/;
+    my %sum;
+    while (my ($url, $s) = each %stat) {
+       $sum{$_} += $s->{$_} foreach @sumkeys;
+    }
+    my @sums = ("Total (from last $span sec)", map { raw_cell($_, $sum{$_}) } @keys);
 
     # Sort queries according to $sortkey (they are all numeric)
     my @rows;
-    my %sum;
     foreach my $url (sort { $stat{$b}{$sortkey} <=> $stat{$a}{$sortkey} } keys %stat) {
-        my $s = $stat{$url};
-        $sum{$_} += $s->{$_} foreach @sumkeys;
-
-        # Continue to loop and only sum totals even if $count records have been rendered
-        next if @rows >= $count;
-
-        my @cells = map { raw_cell($_, $s->{$_}) } @keys;
+        my @cells = map { raw_cell($_, $stat{$url}{$_}) } @keys;
         push(@rows, [ $url, @cells]);
+        last if @rows >= $count;
     }
-
-    my @sums = ("Total (from last $span sec)", map { raw_cell($_, $sum{$_}) } @keys);
 
     return { headers => \@headers, rows => \@rows, sums => \@sums };
 }
