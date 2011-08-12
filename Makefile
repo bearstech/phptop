@@ -8,22 +8,16 @@ release:
 	  tar czf $$release.tar.gz $$release; \
 	  rm -rf $$release )
 
-# Bearstech target
-build:
-	dpkg-buildpackage -rfakeroot -i -I.svn -I'*.log' -uc -us
-
 deb:
-	@echo "Don't forget to edit debian/changelog (dch -v <version>)..."
-	@echo "Building the package..."
-	dpkg-buildpackage -rfakeroot -i -I.svn -I'*.log'
+	dpkg-buildpackage -rfakeroot -i -I.svn -I'*.log' -uc -us
 
 debclean:
 	fakeroot debian/rules clean
 	rm build
 
-debupload:
-	rsync -z ../phptop_*.deb builder@deb.bearstech.com:~/src/phptop
-	ssh builder@deb.bearstech.com make -C www/squeeze phptop
+bearstech-build:
+	ssh builder@melba  'cd src/phptop/phptop-svn && svn up && make deb && make -C /var/www/deb.bearstech.com/lenny phptop'
+	ssh builder@rupert 'cd phptop/phptop-svn && svn up && build && upload phptop'
 
-deploy:
+bearstech-deploy:
 	foreach -e 'dpkg -l phptop 2>/dev/null|egrep ^i >/dev/null && aptitude update >/dev/null && apt-get --force-yes -y -q=2 install phptop'
