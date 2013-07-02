@@ -1,5 +1,5 @@
 default:
-	echo Targets: release
+	echo Targets: release deb debclean
 
 release:
 	release=phptop-`./phptop --version | sed 's/phptop[^ ]* //'`; \
@@ -14,10 +14,3 @@ deb:
 debclean:
 	fakeroot debian/rules clean
 	rm build
-
-bearstech-build:
-	ssh builder@melba  'cd src/phptop/phptop-svn && svn up && make deb && make -C /var/www/deb.bearstech.com/lenny phptop'
-	ssh builder@rupert 'cd phptop/phptop-svn && svn up && build && upload phptop'
-
-bearstech-deploy:
-	foreach -e 'dpkg -l phptop 2>/dev/null|egrep ^i >/dev/null && aptitude update >/dev/null && apt-get --force-yes -y -q=2 install phptop'
