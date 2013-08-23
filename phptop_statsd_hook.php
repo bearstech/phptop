@@ -40,6 +40,7 @@ function _phptop_shutdown() {
   $ru = getrusage();
   $tusr = $ru['ru_utime.tv_sec'] + $ru['ru_utime.tv_usec'] / 1e6 - $_phptop_t0['tusr'];
   $tsys = $ru['ru_stime.tv_sec'] + $ru['ru_stime.tv_usec'] / 1e6 - $_phptop_t0['tsys'];
+  $ttotal = $tusr + $tsys;
 
   $mem   = memory_get_peak_usage(TRUE);
 
@@ -51,7 +52,7 @@ function _phptop_shutdown() {
   try {
       $fp = fsockopen("udp://$host", $port, $errno, $errstr);
       if (! $fp) { return; }
-      fwrite($fp, "$vhost.php.cpu.user:$tusr|ms\n$vhost.php.cpu.sys:$tsys|ms\n$vhost.php.mem:$mem|ms");
+      fwrite($fp, "$vhost.php.cpu.user:$tusr|ms\n$vhost.php.cpu.sys:$tsys|ms\n$vhost.php.cpu.total:$ttotal|ms\n$vhost.php.mem:$mem|ms");
       fclose($fp);
   } catch (Exception $e) {
   }
