@@ -43,10 +43,7 @@ function _phptop_shutdown() {
 
   $mem   = memory_get_peak_usage(TRUE);
 
-  $proto = isset($_SERVER['HTTPS']) ? 'https' : 'http';
-  $vhost = $_SERVER['SERVER_NAME'];
-  $uri   = $_SERVER['REQUEST_URI'];
-  $self  = $vhost != '' ? "$proto://$vhost$uri" : $_SERVER['SCRIPT_FILENAME'];
+  $vhost = str_replace('.', '_', $_SERVER['SERVER_NAME']);
 
   $port = 8125;
   $host = '127.0.0.1';
