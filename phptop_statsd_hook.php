@@ -62,5 +62,4 @@ function _phptop_shutdown() {
 
 /* Don't run in CLI, it pollutes stderr and makes cronjob un-needingly noisy */
 if (php_sapi_name() != 'cli') _phptop_init();
-_phptop_init();
 ?>
