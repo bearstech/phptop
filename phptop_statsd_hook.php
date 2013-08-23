@@ -54,7 +54,7 @@ function _phptop_shutdown() {
   try {
       $fp = fsockopen("udp://$host", $port, $errno, $errstr);
       if (! $fp) { return; }
-      fwrite($fp, "user:$tusr|ms\nsys:$tsys|ms\nmem:$mem|g\nphp:1|c");
+      fwrite($fp, "user:$tusr|ms\nsys:$tsys|ms\nmem:$mem|ms");
       fclose($fp);
   } catch (Exception $e) {
   }
