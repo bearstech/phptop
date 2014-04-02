@@ -1,3 +1,7 @@
+phptop 0.5.5 - NOT YET
+
+    * Added -g|--goto DATE option
+
 phptop 0.5.4 - 2011-08-12
 
     * Improved man page, mentionned error log problems and CLI not being

@@ -1,3 +1,2 @@
-- CSV output mode ? (for spreadsheats)
+- CSV output mode ? (for spreadsheets)
 - Term color mode
-- -f|--from <timespec> to parse from a given date

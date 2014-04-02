@@ -1,6 +1,6 @@
 .\" Yes, this file is manually edited.
 .\"
-.TH "PHPTOP" "1" "08/12/2011" "\  0.5.4" "\ "
+.TH "PHPTOP" "1" "08/12/2011" "\  0.5.5-dev" "\ "
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -27,6 +27,9 @@ Limit output to top N URLs (default is 10).
 .TP
 \-f, \-\-full\-query
 Consider full URL with CGI parameters (ie. do not strip ?param=...).
+.TP
+\-g, \-\-goto DATE
+Instead of analysing data starting from now and back up to --time seconds, start from DATE. The format may use absolute or relative dates in a quite natural language, see Perl's Time::ParseDate module. Examples of valid DATE strings: yesterday, 2 hours ago, 15:30, last monday.
 .TP
 \-h, \-\-help
 Display a short options summary.

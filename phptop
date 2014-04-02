@@ -23,9 +23,10 @@ use HTTP::Date;
 use POSIX qw(setlocale strftime);
 use Term::Size;
 use Sys::Hostname;
+use Time::ParseDate;
 
 my $package_name    = 'phptop';
-my $package_version = '0.5.4';
+my $package_version = '0.5.5-dev';
 my $package_owner   = 'Copyright (C) 2009,2010,2011 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
@@ -35,6 +36,7 @@ my $help;
 my $version;
 my @log;
 my $full_query;
+my $goto;
 my $path_only;
 my @sortkeys;
 my $count  = 10;
@@ -44,9 +46,9 @@ my $relative;
 my $average;
 
 # Globals
-my @keys = qw/hit time user sys mem mem_max/;
+my @keys  = qw/hit time user sys mem mem_max/;
 my %stat;
-my $now   = time();
+my $t0    = time();
 my $hits  = 0;
 my $bogus = 0;
 
@@ -131,7 +133,7 @@ sub parse_log {
         # cannot be parsed, we still process the item.
         if (/^\[(.*?)\]/) {
             my $stamp = str2time($1);
-            my $skip = defined $stamp && ($now - $stamp) > $span;
+            my $skip = defined $stamp && ($t0 - $stamp) > $span;
 
             if ($reverse and $skip) {
                 # Reverse parsing: exit loop when at least 10 out of time records
@@ -358,6 +360,7 @@ GetOptions(
     'a|average'      => \$average,
     'c|count=i'      => \$count,
     'f|full-query'   => \$full_query,
+    'g|goto=s'       => \$goto,
     'h|help'         => \$help,
     'l|log=s'        => \@log,
     'o|output=s'     => \$output,
@@ -368,6 +371,9 @@ GetOptions(
     'v|version'      => \$version,
 )
 or print_short_help();
+
+print_help() if $help;
+print_version() if $version;
 
 @sortkeys = ('hit') if not @sortkeys;
 foreach my $k (@sortkeys) {
@@ -381,8 +387,13 @@ if (not $output =~ /^text|html$/) {
   exit 1;
 }
 
-print_help() if $help;
-print_version() if $version;
+if (defined $goto) {
+  $t0 = parsedate($goto);
+  if (not defined $t0) {
+    print STDERR "Could not interpret -g|--goto '$goto'.\n";
+    exit 1;
+  }
+}
 
 my @logfiles;
 push(@log, '/var/log/apache2/error*log', '/var/log/apache2/*/error*log') if !@log;
