@@ -27,7 +27,7 @@ use Time::ParseDate;
 use File::ReadBackwards;
 
 my $package_name    = 'phptop';
-my $package_version = '0.5.5';
+my $package_version = '0.5.6-dev';
 my $package_owner   = 'Copyright (C) 2009,2010,2011 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
