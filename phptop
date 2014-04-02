@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # phptop - Analyse quickly system ressource usage across many PHP queries
-# Copyright (C) 2009,2010,2011 Bearstech - http://bearstech.com/
+# Copyright (C) 2009,2010,2011,2014 Bearstech - http://bearstech.com/
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,9 +24,10 @@ use POSIX qw(setlocale strftime);
 use Term::Size;
 use Sys::Hostname;
 use Time::ParseDate;
+use File::ReadBackwards;
 
 my $package_name    = 'phptop';
-my $package_version = '0.5.5-dev';
+my $package_version = '0.5.5';
 my $package_owner   = 'Copyright (C) 2009,2010,2011 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
@@ -102,29 +103,30 @@ sub print_version {
 sub parse_log {
     my $logfile = shift;
 
-    my $lh;
-    my $reverse = 0;
+    my $reverse;
     my $revmiss = 0;
 
-    # Try to open logfile in 'reverse' mode first, using 'tac'
-    # (trying to parse less lines and hence being much faster)
-    {
-        # It's okay for open(tac|) to fail, and we handle the other open errors explicitly
-        no warnings;
-    
-        if (open($lh, '-|', "tac $logfile")) {
-            $reverse = 1;
-        }
-        elsif (!open($lh, '<', $logfile)) {
-            warn "$logfile: $!";
-            return 0;
-        }
+    if ($logfile =~ /\.gz$/) {
+      # We can process gzipped log file, but only in forward mode because you
+      # can't seek in gzip streams. Most of the time it will be slower because
+      # the info you want is at the end of the log.
+      if (!open(LH, '-|', 'gzip', '-cd', $logfile)) {
+        warn "$logfile (via gzip): $!";
+        return 0;
+      }
+      $reverse = 0;
+    } else {
+      if (!tie(*LH, 'File::ReadBackwards', $logfile)) {
+        warn "$logfile ($logfile): $!";
+        return 0;
+      }
+      $reverse = 1;
     }
 
     setlocale(POSIX::LC_NUMERIC, 'C'); # Use . as decimal separator
 
   LINE:
-    while (<$lh>) {
+    while (<LH>) {
         chomp;
         next if not /\bphptop ([^ ]+) (.*)/;
         my ($url, $pairs) = ($1, $2);
@@ -180,7 +182,7 @@ sub parse_log {
         $hits++;
     }
 
-    close($lh);
+    close(LH);
     1;
 }
 

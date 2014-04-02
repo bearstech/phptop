@@ -1,6 +1,9 @@
-phptop 0.5.5 - NOT YET
+phptop 0.5.5 - 2014-04-02
 
     * Added -g|--goto DATE option
+    * Now using File::Readbackwards Perl module instead of calling 'tac'
+    * Supports gzipped log files - might be slower because it has to fallback
+      on forward parsing
 
 phptop 0.5.4 - 2011-08-12
 

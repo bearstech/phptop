@@ -1,3 +1,9 @@
+phptop (0.5.5-1) stable; urgency=medium
+
+  * Upstream update, see NEWS file 
+
+ -- Vincent CARON <vcaron@bearstech.com>  Wed, 02 Apr 2014 22:56:12 +0200
+
 phptop (0.5.4-1) stable; urgency=low
 
   * Upstream update, see NEWS file 
