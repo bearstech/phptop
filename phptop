@@ -71,6 +71,7 @@ Options:
   -a, --average        Show per-hit average values instead of cumulated time
   -c, --count N        Limit output to top N URLs (default is $count)
   -f, --full-query     Consider full URL with CGI parameters
+  -g, --goto DATE      Analyse up to given date ('natural' format allowed)
   -h, --help           Display this information
   -l, --log path       Logfiles to parse, you may use several -l and wildcards
   -o, --output mode    Output mode: text or html (default is $output);
