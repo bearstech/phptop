@@ -52,7 +52,9 @@ function _phptop_shutdown() {
   try {
       $fp = fsockopen("udp://$host", $port, $errno, $errstr);
       if (! $fp) { return; }
-      fwrite($fp, "$vhost.php.cpu.user:$tusr|ms\n$vhost.php.cpu.sys:$tsys|ms\n$vhost.php.cpu.total:$ttotal|ms\n$vhost.php.mem:$mem|ms");
+      fwrite($fp, "$vhost.php.cpu.user:$tusr|ms\n$vhost.php.cpu.sys:$tsys|ms\n");
+      fwrite($fp, "$vhost.php.cpu.total:$ttotal|ms\n$vhost.php.mem:$mem|ms\n");
+      fwrite($fp, "$vhost.php.time:$time|ms");
       fclose($fp);
   } catch (Exception $e) {
   }
