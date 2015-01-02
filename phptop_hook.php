@@ -26,6 +26,7 @@ function _phptop_init() {
     'tusr' => $ru['ru_utime.tv_sec'] + $ru['ru_utime.tv_usec'] / 1e6,
     'tsys' => $ru['ru_stime.tv_sec'] + $ru['ru_stime.tv_usec'] / 1e6
   );
+  define('SAVEQUERIES', True);
   register_shutdown_function('_phptop_fini');
 }
 
@@ -34,6 +35,7 @@ function _phptop_fini() {
   if ($_phptop_disable) return;
 
   global $_phptop_t0;
+  global $wpdb;
   $t1   = microtime(TRUE);
   $time = $t1 - $_phptop_t0['time'];
 
@@ -48,7 +50,14 @@ function _phptop_fini() {
   $uri   = $_SERVER['REQUEST_URI'];
   $self  = $vhost != '' ? "$proto://$vhost$uri" : $_SERVER['SCRIPT_FILENAME'];
 
-  $msg = sprintf("phptop %s time:%.6F user:%.6F sys:%.6F mem:%d", $self, $time, $tusr, $tsys, $mem);
+  $cum = 0;
+  $max = 0;
+  foreach ($wpdb->queries as $query){ // query, timer, caller
+      $cum += $query[1];
+      $max = max($max, $query[1]);
+  }
+
+  $msg = sprintf("phptop %s time:%.6F user:%.6F sys:%.6F mem:%d mysql cum:%.6F max:%.6F #%.6F", $self, $time, $tusr, $tsys, $mem, $cum, $max, $wpdb->num_queries);
   error_log($msg);
 }
 
