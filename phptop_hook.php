@@ -52,12 +52,15 @@ function _phptop_fini() {
 
   $cum = 0;
   $max = 0;
-  foreach ($wpdb->queries as $query){ // query, timer, caller
+  $num_queries = 0;
+  if (isset($wpdb)) {
+    foreach ($wpdb->queries as $query){ // query, timer, caller
       $cum += $query[1];
       $max = max($max, $query[1]);
+    }
+    $num_queries = $wpdb->num_queries;
   }
-
-  $msg = sprintf("phptop %s time:%.6F user:%.6F sys:%.6F mem:%d mysql cum:%.6F max:%.6F #%.6F", $self, $time, $tusr, $tsys, $mem, $cum, $max, $wpdb->num_queries);
+  $msg = sprintf("phptop %s time:%.6F user:%.6F sys:%.6F mem:%d mysql total:%.6F max:%.6F #%d", $self, $time, $tusr, $tsys, $mem, $cum, $max, $num_queries);
   error_log($msg);
 }
 
