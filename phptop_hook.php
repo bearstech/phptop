@@ -26,8 +26,9 @@ function _phptop_init() {
     'tusr' => $ru['ru_utime.tv_sec'] + $ru['ru_utime.tv_usec'] / 1e6,
     'tsys' => $ru['ru_stime.tv_sec'] + $ru['ru_stime.tv_usec'] / 1e6
   );
-  define('SAVEQUERIES', True);
   register_shutdown_function('_phptop_fini');
+
+  define('SAVEQUERIES', True);  # Ask Wordpress (if present) to record SQL query statistics
 }
 
 function _phptop_fini() {
@@ -35,7 +36,6 @@ function _phptop_fini() {
   if ($_phptop_disable) return;
 
   global $_phptop_t0;
-  global $wpdb;
   $t1   = microtime(TRUE);
   $time = $t1 - $_phptop_t0['time'];
 
@@ -50,17 +50,20 @@ function _phptop_fini() {
   $uri   = $_SERVER['REQUEST_URI'];
   $self  = $vhost != '' ? "$proto://$vhost$uri" : $_SERVER['SCRIPT_FILENAME'];
 
-  $cum = 0;
-  $max = 0;
-  $num_queries = 0;
+  $msg = sprintf("phptop %s time:%.6F user:%.6F sys:%.6F mem:%d", $self, $time, $tusr, $tsys, $mem);
+
+  # Wordpress specific statistics
+  global $wpdb;
   if (isset($wpdb)) {
-    foreach ($wpdb->queries as $query){ // query, timer, caller
-      $cum += $query[1];
-      $max = max($max, $query[1]);
+    $sqltime = 0;
+    $sqlslower = 0;
+    foreach ($wpdb->queries as $q){ // query, timer, caller
+      $sqltime += $q[1];
+      $sqlslower = max($sqlslower, $q[1]);
     }
-    $num_queries = $wpdb->num_queries;
+    $msg .= sprintf(" sqltime:%.6F sqlslower:%.6F sqlcount:%d", $sqltime, $sqlslower, $wpdb->num_queries);
   }
-  $msg = sprintf("phptop %s time:%.6F user:%.6F sys:%.6F mem:%d mysql total:%.6F max:%.6F #%d", $self, $time, $tusr, $tsys, $mem, $cum, $max, $num_queries);
+
   error_log($msg);
 }
 
