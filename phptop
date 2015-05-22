@@ -38,6 +38,7 @@ my $version;
 my @log;
 my $full_query;
 my $goto;
+my $domain_only;
 my $path_only;
 my @sortkeys;
 my $count  = 10;
@@ -70,12 +71,13 @@ Usage: $package_name [options]
 Options:
   -a, --average        Show per-hit average values instead of cumulated time
   -c, --count N        Limit output to top N URLs (default is $count)
+  -d, --domain         Only use domain, ignore URL path
   -f, --full-query     Consider full URL with CGI parameters
   -g, --goto DATE      Analyse up to given date ('natural' format allowed)
   -h, --help           Display this information
   -l, --log path       Logfiles to parse, you may use several -l and wildcards
   -o, --output mode    Output mode: text or html (default is $output);
-  -p, --path-only      Only print path, skip http://host
+  -p, --path-only      Only use path, ignore http://host
   -r, --relative       Print relative hit and time values (in percent)
   -s, --sort key       Sort key: hit, time, user, sys or mem (default is @sortkeys)
   -t, --time N         Parse data from now back to N seconds (default is $span)
@@ -159,6 +161,7 @@ sub parse_log {
         $url =~ s/\/+$/\//;         # Ignore multiple trailing slashes
         $url =~ s/\?.*// if not defined $full_query;
         $url =~ s/^https?:\/\/[^\/]+// if defined $path_only;
+        $url =~ s/^https?:\/\/([^\/]+).*/$1/ if defined $domain_only;
 
         # For each 'key:<numeric val>' sum the numeric value per URL
         foreach (@kv) {
@@ -362,6 +365,7 @@ sub html_report_row {
 GetOptions(
     'a|average'      => \$average,
     'c|count=i'      => \$count,
+    'd|domain'       => \$domain_only,
     'f|full-query'   => \$full_query,
     'g|goto=s'       => \$goto,
     'h|help'         => \$help,
@@ -377,6 +381,11 @@ or print_short_help();
 
 print_help() if $help;
 print_version() if $version;
+
+if (defined $domain_only and defined $path_only) {
+  print STDERR "Options -d|--domain and -p|--path cannot be specified at the same time.\n";
+  exit 1;
+}
 
 @sortkeys = ('hit') if not @sortkeys;
 foreach my $k (@sortkeys) {
