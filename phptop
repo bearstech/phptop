@@ -27,7 +27,7 @@ use Time::ParseDate;
 use File::ReadBackwards;
 
 my $package_name    = 'phptop';
-my $package_version = '0.5.6-dev';
+my $package_version = '0.5.6';
 my $package_owner   = 'Copyright (C) 2009,2010,2011 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
@@ -137,7 +137,9 @@ sub parse_log {
         # Only keep records within expected time span. If a time stamp is not found or
         # cannot be parsed, we still process the item.
         if (/^\[(.*?)\]/) {
-            my $stamp = str2time($1);
+            my $logdate = $1;
+            $logdate =~ s/\.\d+\b//g;  # Remove sub-second decimals (Apache >= 2.4)
+            my $stamp = str2time($logdate);
             my $skip = defined $stamp && ($t0 - $stamp) > $span;
 
             if ($reverse and $skip) {
