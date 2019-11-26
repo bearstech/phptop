@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # phptop - Analyse quickly system ressource usage across many PHP queries
-# Copyright (C) 2009,2010,2011,2014 Bearstech - http://bearstech.com/
+# Copyright (C) 2009-2019 Bearstech - https://bearstech.com/
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ use File::ReadBackwards;
 
 my $package_name    = 'phptop';
 my $package_version = '0.5.7';
-my $package_owner   = 'Copyright (C) 2009,2010,2011 Bearstech - http://bearstech.com/';
+my $package_owner   = 'Copyright (C) 2009-2019 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
 # Options
