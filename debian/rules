@@ -19,7 +19,7 @@ install: build
 
 				install -o root -g root -m 444 $(CURDIR)/phptop_hook.php $(CURDIR)/debian/phptop/usr/share/phptop/phptop_hook.php
 				install -o root -g root -m 755 $(CURDIR)/phptop $(CURDIR)/debian/phptop/usr/bin/phptop
-				install -o root -g root -m 444 $(CURDIR)/debian/phptop.ini $(CURDIR)/debian/phptop/etc/php5/conf.d/phptop.ini
+				install -o root -g root -m 444 $(CURDIR)/debian/phptop.ini $(CURDIR)/debian/phptop/etc/php/7.0/mods-available/phptop.ini
 
 binary: build install
 				dh_testdir

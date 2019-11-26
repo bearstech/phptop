@@ -50,7 +50,7 @@ function _phptop_fini() {
   $uri   = $_SERVER['REQUEST_URI'];
   $self  = $vhost != '' ? "$proto://$vhost$uri" : $_SERVER['SCRIPT_FILENAME'];
 
-  $msg = sprintf("phptop %s time:%.6F user:%.6F sys:%.6F mem:%d", $self, $time, $tusr, $tsys, $mem);
+  $msg = sprintf("phptop time:%.3F user:%.3F sys:%.3F mem:%03dM", $time, $tusr, $tsys, ($mem + 2**20 - 1)/2**20);
 
   # Wordpress specific statistics
   global $wpdb;
@@ -61,10 +61,10 @@ function _phptop_fini() {
       $sqltime += $q[1];
       $sqlslower = max($sqlslower, $q[1]);
     }
-    $msg .= sprintf(" sqltime:%.6F sqlslower:%.6F sqlcount:%d", $sqltime, $sqlslower, $wpdb->num_queries);
+    $msg .= sprintf(" sqltime:%.3F sqlslower:%.3F sqlcount:%03d", $sqltime, $sqlslower, $wpdb->num_queries);
   }
 
-  error_log($msg);
+  error_log("$msg url:$self");
 }
 
 /* Don't run in CLI, it pollutes stderr and makes cronjob un-needingly noisy */

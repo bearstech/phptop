@@ -3,7 +3,18 @@ set -e
 
 case "$1" in
 	"configure")
-		invoke-rc.d apache2 reload
+		if [ -e /usr/lib/apache2/modules/libphp7.0.so ]; then
+			phpenmod -s apache2 phptop
+			invoke-rc.d apache2 reload
+		fi
+		if which php-cgi7.0 >/dev/null; then
+			phpenmod -s cgi phptop
+			invoke-rc.d apache2 reload  # Only works with libapache2-mod-fcgid
+		fi
+		if which php-fpm7.0 >/dev/null; then
+			phpenmod -s fpm phptop
+			invoke-rc.d php7.0-fpm reload
+		fi
 	;;
 	*)
 		echo "postinst called with unknown argument \`$1'" >&2

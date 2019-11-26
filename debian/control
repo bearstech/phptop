@@ -9,7 +9,6 @@ Package: phptop
 Architecture: all
 Depends: perl (>= 5.8), libwww-perl, libterm-size-perl, libtime-modules-perl,
   libfile-readbackwards-perl, ${shlibs:Depends}, ${misc:Depends}
-Recommends: php5-cgi|libapache2-mod-php5|libapache2-mod-php5filter
 Description: php resource statistics tool
  phptop prints per query and average metrics of resource taken by PHP scripts
  that are actually being executed, without modyfing any application code.
