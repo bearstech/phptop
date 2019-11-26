@@ -6,7 +6,7 @@ user and system CPU time) along with memory and other ressource usages.
 It can be easily globally activated on a LAMP server and requires little
 ressources and a single line configuration change in your php.ini.
 
-Requires PHP >= 4.3.10 or PHP >= 5.0.3. Tested up to PHP 7.0.
+Requires PHP >= 5.2.0. Tested up to PHP 7.0.
 
 Example usage:
 
