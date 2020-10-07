@@ -1,3 +1,8 @@
+phptop 0.5.8 - 2020-10-07
+
+    * More explicit warnings about parsed vs. selected phptop records
+    * More robust parsing with FPM vs. Fcgid vs. mod_php
+
 phptop 0.5.7 - 2019-11-26
 
     * Better formating/alignement (URL at the end), easier to read and compare

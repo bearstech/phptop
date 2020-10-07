@@ -27,7 +27,7 @@ use Time::ParseDate;
 use File::ReadBackwards;
 
 my $package_name    = 'phptop';
-my $package_version = '0.5.7';
+my $package_version = '0.5.8';
 my $package_owner   = 'Copyright (C) 2009-2019 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
@@ -51,6 +51,7 @@ my $average;
 my @keys  = qw/hit time user sys mem mem_max/;
 my %stat;
 my $t0    = time();
+my $recs  = 0;
 my $hits  = 0;
 my $bogus = 0;
 
@@ -128,11 +129,25 @@ sub parse_log {
 
     setlocale(POSIX::LC_NUMERIC, 'C'); # Use . as decimal separator
 
+  # What we parse is ...
+  #
+  # Apache 2 + mod_fcgid + php-cgi (here with WP):
+  # [Tue Nov 26 14:50:09.539796 2019] [fcgid:warn] [pid 20789:tid 140657058330368] [client 1.2.3.4:49839] mod_fcgid: stderr: phptop time:0.438 user:0.400 sys:0.012 mem:301M sqltime:0.003 sqlslower:0.000 sqlcount:21 url:http://www.site.com/feed/
+  #
+  # Apache 2 + mod_proxy + php-fpm (here with non-WP app):
+  # [Tue Nov 26 15:30:19.442303 2019] [proxy_fcgi:error] [pid 5154:tid 140151216924416] [client 1.2.3.4:1370] AH01071: Got error 'PHP message: phptop time:0.000 user:0.000 sys:0.000 mem:002M url:https://www.site.com/feed/\n'
+  #
+  # Apache 2 + mod_php:
+  # [Wed Oct 07 09:24:30.634403 2020] [php7:notice] [pid 19891:tid 140633495107328] [client 123.123.123.1:25655] phptop time:0.003 user:0.003 sys:0.000 mem:002M url:https://myserver/
+  #
+  # PHP-FPM error.log :
+  # [26-Nov-2019 14:28:58 UTC] phptop time:2.030 user:0.600 sys:0.028 mem:002M sqltime:0.290 sqlslower:0.010 sqlcount:276 url:https://www.site.com/feed/
   LINE:
     while (<LH>) {
         chomp;
-        next if not /\bphptop ([^ ]+) (.*)/;
-        my ($url, $pairs) = ($1, $2);
+        next if not /\bphptop (.*)/;
+        my $values = $1;
+        $recs++;
 
         # Only keep records within expected time span. If a time stamp is not found or
         # cannot be parsed, we still process the item.
@@ -153,10 +168,21 @@ sub parse_log {
             next LINE if $skip;
         }
 
-        $pairs =~ s/, referer.*//;     # Apache may append a referer in error.log, ignore
-        $pairs =~ s/(\d),(\d)/$1.$2/g; # Be independent from the PHP locale, normalize on dot decimal separator
-        my @kv = split(/ /, $pairs);
-        next if @kv < 4;               # Protect against bogus/wrapped phptop records, count pairs
+        # Parse 'key:val' entries
+        my %kv;
+        my $url;
+        $values =~ s/, referer.*//;    # Ignore referer
+        $values =~ s/\\n'$//;          # Ignore proxy_fcgi quoting
+        $values =~ s/(\d),(\d)/$1.$2/g; # Be independent from the PHP locale, normalize numbers on dot decimal separator
+        for (split(/ /, $values)) {
+            my ($key, $val) = split(m=:(?!//)=, $_);  # Split on 'key:val', but not 'proto://...'
+            if ($key eq 'url') {
+              $url = $val;  # URL is the %stat key, we do not store it as a stat value
+            } else {
+              $kv{$key} = $val;
+            }
+        }
+        next if keys %kv < 4;               # Protect against bogus/wrapped phptop records, count values
 
         # Fix URLs (depending on options)
         $url =~ s/index\.php\/?//;  # / == /index.php (99.9% of the time)
@@ -166,16 +192,15 @@ sub parse_log {
         $url =~ s/^https?:\/\/([^\/]+).*/$1/ if defined $domain_only;
 
         # For each 'key:<numeric val>' sum the numeric value per URL
-        foreach (@kv) {
-            my ($key, $val) = split(/:/, $_);
-
+        while(my ($key, $val) = each %kv) {
             # If we have a bogus key/value pair, zap the whole record
-            if ($key eq '' or not defined $val or not $val =~ /^[0-9.]+$/) {
-                delete $stat{$url};
+            if ($key eq '' or not defined $val or not $val =~ /^[0-9.]+[mM]?$/) {
+                delete $stat{$url};  # FIXME: why not ignoring only this sample and keep the record ?
                 $bogus++;
                 next LINE;
             }
 
+            $val *= 2**20 if $val =~ s/[mM]$//;  # Convert from MB to B if M/m suffix found
             $stat{$url}{$key} += $val;
 
             # Compute max for mem values
@@ -420,8 +445,12 @@ if ($parsed == 0) {
     print STDERR "Error: no log files found/processed. Tried: ".join(", ", @log)."\n";
     exit 2;
 }
-if ($hits == 0) {
+if ($recs == 0) {
     print STDERR "No phptop records found.\n";
+    exit 0;
+}
+if ($hits == 0) {
+    print STDERR "Found $recs phptop records, but none selected (see -t option).\n";
     exit 0;
 }
 if ($bogus >= $hits * .05) {

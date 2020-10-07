@@ -1,3 +1,9 @@
+phptop (0.5.8-1) stable; urgency=medium
+
+  * Upstream update, see NEWS file 
+
+ -- Vincent CARON <vcaron@bearstech.com>  Wed,  7 Oct 2020 14:39:14 +0200
+
 phptop (0.5.7-1) stable; urgency=medium
 
   * Debian Stretch / PHP 7.0 support
