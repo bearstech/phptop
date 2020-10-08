@@ -1,4 +1,4 @@
-phptop (0.5.8-1) stable; urgency=medium
+phptop (0.5.8~stretch+bearstech1) stretch-bearstech; urgency=medium
 
   * Upstream update, see NEWS file 
 
