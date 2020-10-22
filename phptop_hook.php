@@ -50,7 +50,7 @@ function _phptop_fini() {
   $uri   = $_SERVER['REQUEST_URI'];
   $self  = $vhost != '' ? "$proto://$vhost$uri" : $_SERVER['SCRIPT_FILENAME'];
 
-  $msg = sprintf("phptop time:%.3F user:%.3F sys:%.3F mem:%03dM", $time, $tusr, $tsys, ($mem + 2**20 - 1)/2**20);
+  $msg = sprintf("phptop time:%.3F user:%.3F sys:%.3F mem:%03dM", $time, $tusr, $tsys, ($mem + 1048576 - 1)/1048576);
 
   # Wordpress specific statistics
   global $wpdb;

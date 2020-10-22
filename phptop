@@ -27,7 +27,7 @@ use Time::ParseDate;
 use File::ReadBackwards;
 
 my $package_name    = 'phptop';
-my $package_version = '0.5.8';
+my $package_version = '0.5.9';
 my $package_owner   = 'Copyright (C) 2009-2019 Bearstech - http://bearstech.com/';
 my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
 
@@ -200,7 +200,7 @@ sub parse_log {
                 next LINE;
             }
 
-            $val *= 2**20 if $val =~ s/[mM]$//;  # Convert from MB to B if M/m suffix found
+            $val *= 1048576 if $val =~ s/[mM]$//;  # Convert from MB to B if M/m suffix found
             $stat{$url}{$key} += $val;
 
             # Compute max for mem values
@@ -224,8 +224,8 @@ sub fix_stat {
     while (my ($url, $i) = each %stat) {
         # Convert 'mem' values from total to 'per hit' average, more meaningful.
         # Also scale memory values from bytes to MB.
-        $i->{'mem'} /= $i->{'hit'} * 2**20;
-        $i->{'mem_max'} /= 2**20;
+        $i->{'mem'} /= $i->{'hit'} * 1048576;
+        $i->{'mem_max'} /= 1048576;
     }
 }
 

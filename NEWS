@@ -1,3 +1,7 @@
+phptop 0.5.9 - 2020-10-22
+
+    * PHP<5.6 compat: skip using ** for exponentiation
+
 phptop 0.5.8 - 2020-10-07
 
     * More explicit warnings about parsed vs. selected phptop records
