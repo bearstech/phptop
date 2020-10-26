@@ -1,4 +1,10 @@
-phptop (0.5.8~stretch+bearstech1) stretch-bearstech; urgency=medium
+phptop (0.5.9) stable; urgency=medium
+
+  * Upstream update, see NEWS file 
+
+ -- Vincent CARON <vcaron@bearstech.com>  Mon, 26 Oct 2020 13:43:27 +0100
+
+phptop (0.5.8) stable; urgency=medium
 
   * Upstream update, see NEWS file 
 
