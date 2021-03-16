@@ -1,3 +1,8 @@
+phptop 0.5.10 - 2021-03-16
+
+    * Added --mangle option
+    * Documentation update (README, man page, site/bug URLs)
+
 phptop 0.5.9 - 2020-10-22
 
     * PHP<5.6 compat: skip using ** for exponentiation

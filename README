@@ -1,4 +1,4 @@
-phptop (c) 2009-2020 Bearstech - http://bearstech.com/
+phptop (c) 2009-2021 Bearstech - http://bearstech.com/
 
 phptop prints per query and average metrics comparable to 'time' (wallclock,
 user and system CPU time) along with memory and other ressource usages.
@@ -6,7 +6,7 @@ user and system CPU time) along with memory and other ressource usages.
 It can be easily globally activated on a LAMP server and requires little
 ressources and a single line configuration change in your php.ini.
 
-Requires PHP >= 5.2.0. Tested up to PHP 7.0.
+Requires PHP >= 5.2.0. Tested up to PHP 7.3.
 
 Example usage:
 

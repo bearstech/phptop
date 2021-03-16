@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # phptop - Analyse quickly system ressource usage across many PHP queries
-# Copyright (C) 2009-2019 Bearstech - https://bearstech.com/
+# Copyright (C) 2009-2021 Bearstech - https://bearstech.com/
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,9 +27,9 @@ use Time::ParseDate;
 use File::ReadBackwards;
 
 my $package_name    = 'phptop';
-my $package_version = '0.5.9';
-my $package_owner   = 'Copyright (C) 2009-2019 Bearstech - http://bearstech.com/';
-my $package_url     = 'http://forge.bearstech.com/trac/wiki/PhpTop';
+my $package_version = '0.5.10';
+my $package_owner   = 'Copyright (C) 2009-2021 Bearstech - http://bearstech.com/';
+my $package_url     = 'https://github.com/bearstech/phptop';
 
 # Options
 my @opts = @ARGV;  # Save @ARGV, we let GetOptions() modify it
@@ -46,6 +46,7 @@ my $span   = 300;
 my $output = 'text';
 my $relative;
 my $average;
+my $mangle;
 
 # Globals
 my @keys  = qw/hit time user sys mem mem_max/;
@@ -77,6 +78,7 @@ Options:
   -g, --goto DATE      Analyse up to given date ('natural' format allowed)
   -h, --help           Display this information
   -l, --log path       Logfiles to parse, you may use several -l and wildcards
+  -m, --mangle SUBST   Mangle URLs with a ':regex:replace:[flags]' substitution
   -o, --output mode    Output mode: text or html (default is $output);
   -p, --path-only      Only use path, ignore http://host
   -r, --relative       Print relative hit and time values (in percent)
@@ -183,6 +185,9 @@ sub parse_log {
             }
         }
         next if keys %kv < 4;               # Protect against bogus/wrapped phptop records, count values
+
+        # URL user mangling first if defined
+        eval "\$url =~ s$mangle" if defined $mangle;
 
         # Fix URLs (depending on options)
         $url =~ s/index\.php\/?//;  # / == /index.php (99.9% of the time)
@@ -397,6 +402,7 @@ GetOptions(
     'g|goto=s'       => \$goto,
     'h|help'         => \$help,
     'l|log=s'        => \@log,
+    'm|mangle=s'     => \$mangle,
     'o|output=s'     => \$output,
     'p|path'         => \$path_only,
     'r|relative'     => \$relative,
@@ -432,6 +438,10 @@ if (defined $goto) {
     print STDERR "Could not interpret -g|--goto '$goto'.\n";
     exit 1;
   }
+}
+
+if (defined $mangle) {
+  my $test = 'test'; eval "\$test =~ s$mangle";  # Fail early if subst is malformed
 }
 
 my @logfiles;

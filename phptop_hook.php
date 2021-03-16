@@ -1,7 +1,7 @@
 <?php
 /*
  * phptop - Analyse quickly system ressource usage across many PHP queries
- * Copyright (C) 2009-2019 Bearstech - http://bearstech.com/
+ * Copyright (C) 2009-2021 Bearstech - http://bearstech.com/
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

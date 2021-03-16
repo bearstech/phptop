@@ -1,6 +1,6 @@
 .\" Yes, this file is manually edited.
 .\"
-.TH "PHPTOP" "1" "26/11/2019" "\  0.5.9" "\ "
+.TH "PHPTOP" "1" "16/03/2021" "\  0.5.10" "\ "
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -25,6 +25,9 @@ Show per-hit average values instead of cumulated time.
 \-c, \-\-count N
 Limit output to top N URLs (default is 10).
 .TP
+\-d, \-\-domain
+Only use domain, ignore URL path.
+.TP
 \-f, \-\-full\-query
 Consider full URL with CGI parameters (ie. do not strip ?param=...).
 .TP
@@ -37,11 +40,18 @@ Display a short options summary.
 \-l, \-\-log path
 Logfiles to parse, you may use several \-l options and wildcards in paths. Be careful to quote your wildcards in order they are not interpreted by your shell. If no \-l options are used, try a few guesses.
 .TP
+\-m, \-\-mangle :RE:REPLACE:
+Mangle URLs before sorting and counting them, allows to collapse similar URLs into a comme one. For instance:
+
+  phptpop --mangle ':/user/.*:/user/xxx:'
+
+This is a perl substitution, things like modifiers (:g to match all ocurrences, :i for insenstive case, etc.), captures and back-references all work. This substitution is applied before the -p|--path and -d|--domain options.
+.TP
 \-o, \-\-output mode
 Output mode: text or html (default is 'text').
 .TP
 \-p, \-\-path\-only
-Only print URL paths, skip the  http://<host> prefix.
+Only print URL paths, skip the  http(s)://<host> prefix.
 .TP
 \-r, \-\-relative
 Show time values relative to the sample period (see -t). For instance, a cumulated 30sec user time for a 300sec sample will be shown as '10%'. Hits are also printed relative to the total of parsed records.
@@ -82,7 +92,7 @@ Wallclock, system and user times are cumulated for similar URLs, and the total p
 .sp
 The user and system time are CPU ressources. For a one minute observation window (-t 60), on a quad-core system you have 4 minutes (240 seconds) worth of CPU time to be split between user (CPU running application code), system (CPU running kernel code) and idle (CPU waiting I/O or doing nothing). With --relative, the same system will show up to 400% worth of CPU time. On a busy and healthy server, user and system time add up to the whole available CPU time. If your user and system total time is low and far from the available CPU time, consult your server loadavg: if it's high (more than your number of CPUs), your server is probably waiting on I/O (more often disk than network); if it's low, your application might be waiting on remote services (think remote HTTP APIs) which are slow or not responding.
 .sp
-The memory figures can't be added, it would not make any sense. Instead simple satistics like peak (maximum) and average memory per URL are computed. The peak memory usage is very interesting when running phptop over a large time window (one day or more) to figure out your optimal PHP \fBmemory_limit\fP figure, which is itself very useful for proper configuration and usage of system ressources (number of PHP processes, SQL server connections, and so on). Over a short time window it also acts as a poor man's profiler, and can spot.
+The memory figures can't be added, it would not make any sense. Instead simple satistics like peak (maximum) and average memory per URL are computed. The peak memory usage is very interesting when running phptop over a large time window (one day or more) to figure out your optimal PHP \fBmemory_limit\fP figure, which is itself very useful for proper configuration and usage of system ressources (number of PHP processes, SQL server connections, and so on). Over a short time window it also acts as a poor man's profiler, and may spot some memory abuses.
 .sp
 .SH "DISCUSSION"
 phptop hooks into existing code via the \fBauto_prepend_file\fP PHP option. This option might be set and overriden at different levels by other programs (global, per-directory, per-vhost, etc). Since phptop has been verified to have no measurable impact on heavy production servers, it is considered to be a good idea to enable it globally. If your server uses several log files (typically one per virtual host), you will be able to only pickup needed data at analysis time (which is the potentially costly phase).
@@ -98,7 +108,7 @@ phptop should run '-s user' as a default instead of the useless-but-look-ma-my-h
 .sp
 phptop pollutes error logs with non-error information, but this makes phptop fast and safe (see DISCUSSION). As a side effect, phptop won't collect data for scripts run throught the CLI SAPI (it pollutes their stderr), which is a shame.
 .sp
-Please file bugs on http://forge.bearstech.com/trac/newticket (simple registration needed), we try to solve them quickly and release often.
+Please file bugs at \fIhttps://github.com/bearstech/phptop/issues\fR.
 .sp
 .SH "ENVIRONMENT VARIABLES"
 .sp
@@ -114,11 +124,11 @@ If set and stdout is a tty, overrides the detected terminal width. If there is n
 .SH "AUTHOR"
 Written by Vincent Caron
 .sp
-Homepage at \fIhttp://forge.bearstech.com/trac/wiki/PhpTop\fR
+Homepage at \fIhttps://github.com/bearstech/phptop\fR
 .sp
 .SH "COPYRIGHT"
 .sp
-Copyright © 2009-2019 Bearstech. License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+Copyright © 2009-2021 Bearstech. License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
 .sp
 .SH "SEE ALSO"
