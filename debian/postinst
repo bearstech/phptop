@@ -3,17 +3,17 @@ set -e
 
 case "$1" in
 	"configure")
-		if [ -e /usr/lib/apache2/modules/libphp7.0.so ]; then
+		if [ -e /usr/lib/apache2/modules/libphp7.4.so ]; then
 			phpenmod -s apache2 phptop
 			invoke-rc.d apache2 reload
 		fi
-		if which php-cgi7.0 >/dev/null; then
+		if which php-cgi7.4 >/dev/null; then
 			phpenmod -s cgi phptop
 			invoke-rc.d apache2 reload  # Only works with libapache2-mod-fcgid
 		fi
-		if which php-fpm7.0 >/dev/null; then
+		if which php-fpm7.4 >/dev/null; then
 			phpenmod -s fpm phptop
-			invoke-rc.d php7.0-fpm reload
+			invoke-rc.d php7.4-fpm reload
 		fi
 	;;
 	*)

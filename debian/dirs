@@ -1,3 +1,3 @@
 usr/share/phptop
 usr/bin
-etc/php/7.0/mods-available
+etc/php/7.4/mods-available
