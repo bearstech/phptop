@@ -1,4 +1,4 @@
-*phptop (c) 2009-2021 Bearstech - http://bearstech.com/*
+*phptop (c) 2009-2024 Bearstech - https://bearstech.com/*
 
 phptop prints per query and average metrics comparable to 'time' (wallclock,
 user and system CPU time) along with memory and other ressource usages.
@@ -8,7 +8,7 @@ ressources and a single line configuration change in your php.ini. It has been
 used by [Bearstech](https://bearstech.com/) on many production servers for
 years without any problems.
 
-Requires PHP >= 5.2.0. Tested up to PHP 7.3.
+Requires PHP >= 5.2.0. Tested up to PHP 8.2.
 
 Example usage:
 

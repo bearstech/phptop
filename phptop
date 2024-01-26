@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # phptop - Analyse quickly system ressource usage across many PHP queries
-# Copyright (C) 2009-2021 Bearstech - https://bearstech.com/
+# Copyright (C) 2009-2024 Bearstech - https://bearstech.com/
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@ use Time::ParseDate;
 use File::ReadBackwards;
 
 my $package_name    = 'phptop';
-my $package_version = '0.5.10';
-my $package_owner   = 'Copyright (C) 2009-2021 Bearstech - http://bearstech.com/';
+my $package_version = '0.5.11';
+my $package_owner   = 'Copyright (C) 2009-2024 Bearstech - https://bearstech.com/';
 my $package_url     = 'https://github.com/bearstech/phptop';
 
 # Options
@@ -244,23 +244,18 @@ sub raw_cell {
     my $val = $s->{$key};
     return '' if not defined $val; # No value -> blank display
 
+    my $hitspec = '%d';
     my $timespec = '%.1f';
-    my $url_hits = $s->{hit};
-    if (defined $average and defined $url_hits) {
-        $val /= $url_hits if $key =~ /time|user|sys/;
+    if (defined $average) {
         $timespec = '%.3f';  # Per hit time values are rather in milliseconds
     }
-
     if (defined $relative) {
-        # Relative value for time columns
-        return sprintf('%.1f%%', $val / $span * 100) if $key =~ /time|user|sys/;
-
-        # Relative value for hits
-        return sprintf('%.1f%%', $val / $hits * 100) if $key eq 'hit';
+        $hitspec  = '%.1f%%';
+        $timespec = '%.1f%%';
     }
 
-    return sprintf('%d', $val) if $key =~ /hit/;  # Hit counts -> plain integer values
-    return sprintf($timespec, $val)               # Otherwise, absolute value in seconds
+    return sprintf($hitspec, $val) if $key eq 'hit';
+    return sprintf($timespec, $val);
 }
 
 # raw_report() compute the tabular report which is then rendered via another routine.
@@ -276,12 +271,30 @@ sub raw_report {
     unshift(@headers, 'URL');
 
     # We compute grand totals for these keys
-    my @sumkeys = qw/hit time user sys/;
     my %sum;
     while (my ($url, $s) = each %stat) {
-       $sum{$_} += $s->{$_} foreach @sumkeys;
+       $sum{hit}  += $s->{hit};
+       $sum{user} += $s->{user};
+       $sum{sys}  += $s->{sys};
     }
-    my @sums = ("Total (from last $span sec)", map { raw_cell($_, { $_ => $sum{$_}, hit => $hits }) } @keys);
+    $sum{hit} = 100 if defined $relative;
+    my @sums = ("Total (from last $span sec)", map { raw_cell($_, \%sum)} @keys);
+
+    # Transform statistics before sort+display (average and/or relative)
+    while (my ($url, $s) = each %stat) {
+        my $url_hits = $s->{hit};
+        if (defined $average and defined $url_hits) {
+            $s->{time} /= $url_hits;
+            $s->{user} /= $url_hits;
+            $s->{sys}  /= $url_hits;
+        }
+        if (defined $relative) {
+            $s->{hit}  /= $hits/100;
+            $s->{time} /= $span/100;
+            $s->{user} /= $span/100;
+            $s->{sys}  /= $span/100;
+        }
+    }
 
     # Sort queries according to $sortkey (they are all numeric)
     my @rows;

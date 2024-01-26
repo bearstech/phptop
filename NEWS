@@ -1,3 +1,8 @@
+phptop 0.5.11 - 2024-01-26
+
+    * Fixed sorting when using -a|--average and/or -r|--relative
+    * Don't show wallclock time sum, it does make any sense
+
 phptop 0.5.10 - 2021-03-16
 
     * Added --mangle option
