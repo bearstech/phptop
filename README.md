@@ -4,7 +4,7 @@ phptop prints per query and average metrics comparable to 'time' (wallclock,
 user and system CPU time) along with memory and other ressource usages.
 
 It can be easily globally activated on a LAMP server and requires little
-ressources and a single line configuration change in your php.ini. It has been
+resources and a single line configuration change in your php.ini. It has been
 used by [Bearstech](https://bearstech.com/) on many production servers for
 years without any problems.
 
