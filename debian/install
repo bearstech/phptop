@@ -1,0 +1,3 @@
+phptop_hook.php   /usr/share/phptop
+phptop            /usr/bin
+debian/phptop.ini /etc/php/8.4/mods-available/phptop.ini
